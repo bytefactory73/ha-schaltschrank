@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#15372e">
+  <title>Schaltschrank Beziehungen</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <main class="main-content">
+      <header class="topbar">
+        <div class="topbar-brand-cluster">
+          <button id="brand-home" class="brand-row" type="button" aria-label="Zur Startseite">
+            <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+            <span class="brand-copy"><span class="brand-kicker">__APP_TITLE__</span><span class="brand-title">Schaltschrank</span></span>
+          </button>
+          <div class="crumb"><span class="crumb-square"></span><span>ANLAGENÜBERSICHT</span><span class="crumb-slash">/</span><span id="crumb-current">BEZIEHUNGEN</span></div>
+        </div>
+        <div class="main-search-control">
+          <div class="search-box">
+            <span class="search-glyph" aria-hidden="true">⌕</span>
+            <div id="search-filter-tags" class="search-filter-tags" aria-live="polite"></div>
+            <input id="search" type="search" aria-label="Suchen" placeholder="Geräte-ID, Adresse, Klemme" autocomplete="off" spellcheck="false">
+            <kbd>ESC</kbd>
+          </div>
+          <div class="search-meta-row"><div class="search-caption" hidden><span class="live-dot"></span><span id="search-status"></span></div><div id="review-search-terms" class="review-search-terms" role="group" aria-label="Nach Prüfstatus suchen"><button class="search-review-term" type="button" data-review-search-term="Überprüft">Überprüft</button><button class="search-review-term" type="button" data-review-search-term="Nicht überprüft">Nicht überprüft</button></div></div>
+        </div>
+        <button id="settings-toggle" class="settings-toggle" type="button" aria-label="Einstellungen öffnen" title="Einstellungen"><span aria-hidden="true">⚙</span></button>
+      </header>
+
+      <section id="search-view" class="search-view" hidden>
+        <div class="search-view-heading"><div><p class="section-tag">SUCHERGEBNISSE</p><h2>Treffer <span id="result-count">0</span></h2></div></div>
+        <div id="search-filters" class="search-filters" role="group" aria-label="Ergebnisse filtern" hidden></div>
+        <nav id="results" class="results" aria-label="Suchergebnisse"><div class="empty-results">Suchbegriff eingeben</div></nav>
+      </section>
+
+      <section id="welcome" class="welcome-view">
+        <section class="home-overviews" aria-labelledby="home-overviews-title">
+          <div class="home-overviews-heading"><p class="section-tag">DATENBESTAND</p><h2 id="home-overviews-title">Alle Bereiche</h2></div>
+          <div id="home-overview-buttons" class="home-overview-buttons"></div>
+          <button id="open-graph" class="graph-launch" type="button">
+            <span class="graph-launch-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+            <span class="graph-launch-copy"><strong>Gesamtgraph der Verbindungen</strong><small>FI, Sicherungen, Klemmen und Geräte-Kanäle im Zusammenhang</small></span>
+            <span class="graph-launch-arrow" aria-hidden="true">›</span>
+          </button>
+          <div class="home-database-meta"><span class="database-mark"><span class="db-icon" aria-hidden="true"></span><span>Lokale SQLite-Datenbank</span></span><span class="stats-line"><span><b id="stat-devices">–</b> Geräte</span><span><b id="stat-groups">–</b> Adressen</span></span></div>
+        </section>
+      </section>
+
+      <section id="settings" class="settings-view" hidden>
+        <div class="settings-heading"><p class="section-tag">VERWALTUNG</p><h2>Einstellungen</h2><p class="detail-subtitle">Daten und Verbindungen verwalten</p></div>
+        <div class="settings-actions">
+          <article class="settings-action-card settings-review-card"><span class="settings-action-icon" aria-hidden="true">✓</span><div><h3>Überprüfungsmodus</h3><p>Zeigt Prüf-Checkboxen und Prüfstatus. Wenn deaktiviert, werden keine Prüfstatus angezeigt. Gilt für diese Browser-Sitzung.</p></div><label class="settings-review-toggle"><input id="review-mode-toggle" type="checkbox"><span>Aktiv</span></label></article>
+          <article class="settings-action-card review-only"><span class="settings-action-icon" aria-hidden="true">＋</span><div><h3>Klemme zuordnen</h3><p>Eine Klemme einem Gerätekanal zuweisen.</p></div><button id="add-terminal" class="button button-secondary" type="button">Öffnen</button></article>
+          <article class="settings-action-card review-only"><span class="settings-action-icon" aria-hidden="true">↑</span><div><h3>Excel-Import</h3><p>Klemmenzuordnungen aus einer Arbeitsmappe importieren.</p></div><button id="open-import" class="button button-primary" type="button">Öffnen</button></article>
+          <article class="settings-action-card"><span class="settings-action-icon" aria-hidden="true">↓</span><div><h3>Klemmen exportieren</h3><p>Die gespeicherte Klemmenbelegung einschließlich Gerätekanal-, Sicherungs- und FI-Daten als Excel-Tabelle herunterladen.</p></div><a class="button button-secondary" href="api/export/klemmen" download>Excel herunterladen</a></article>
+          <article class="settings-action-card"><span class="settings-action-icon" aria-hidden="true">↓</span><div><h3>Datenbank exportieren</h3><p>Die gesamte Datenbank als Datei herunterladen (eine saubere Kopie, auch während gearbeitet wird).</p></div><a class="button button-secondary" href="api/database/export" download>Herunterladen</a></article>
+          <article class="settings-action-card review-only"><span class="settings-action-icon" aria-hidden="true">⇪</span><div><h3>Datenbank importieren</h3><p>Ersetzt die gesamte Datenbank durch eine Datei (.sqlite3). Die Datei wird vorher geprüft, die aktuelle Datenbank gesichert; danach startet der Server neu.</p></div><input id="database-file" type="file" accept=".sqlite3,.sqlite,.db" hidden><button id="import-database" class="button button-secondary" type="button">Datei wählen …</button></article>
+          <article class="settings-action-card"><span class="settings-action-icon" aria-hidden="true">↻</span><div><h3>Server neu starten</h3><p>Lädt neue Programmdateien nach einem Update (mit Sicherung der Datenbank beim Start); die Seite lädt sich danach neu.</p></div><button id="restart-server" class="button button-secondary" type="button">Neu starten</button></article>
+        </div>
+      </section>
+
+      <section id="detail" class="detail-view" hidden>
+        <div class="detail-heading">
+          <div>
+            <p class="section-tag" id="detail-kind">GERÄT</p>
+            <div class="detail-title-row"><h2 id="detail-title"></h2><div id="detail-title-action"></div></div>
+            <p class="detail-subtitle" id="detail-subtitle"></p>
+            <div id="detail-review" class="detail-review" hidden></div>
+          </div>
+          <div id="detail-badge" class="address-badge"></div>
+        </div>
+        <div id="detail-content" class="detail-content"></div>
+      </section>
+
+      <section id="graph-view" class="overview-list graph-view" hidden>
+        <div class="overview-list-heading">
+          <div><p class="section-tag">VERBINDUNGEN</p><h2>Gesamtgraph</h2><p id="graph-summary" class="detail-subtitle"></p></div>
+          <div class="graph-pdf">
+            <button id="graph-pdf" class="button button-small button-secondary" type="button" title="Den angezeigten Graph als PDF speichern: Papier, Ausrichtung und weitere Einstellungen wählen">Als PDF …</button>
+          </div>
+        </div>
+        <div class="graph-toolbar">
+          <label class="graph-filter"><span aria-hidden="true">⌕</span><input id="graph-filter" type="search" aria-label="Im Graph filtern" placeholder="Im Graph filtern: Sicherung, Klemme, Gerät …" autocomplete="off" spellcheck="false"></label>
+          <select id="graph-location" class="graph-select" aria-label="Ort wählen"></select>
+          <div class="graph-levels graph-modes" role="group" aria-label="Darstellung">
+            <button type="button" data-graph-mode="fuses">Sicherungen</button>
+            <button type="button" data-graph-mode="loads">Verbraucher</button>
+            <button type="button" data-graph-mode="tree">Leiter</button>
+          </div>
+          <div class="graph-levels" role="group" aria-label="Angezeigte Ebenen">
+            <button type="button" data-graph-depth="2">2 Ebenen</button>
+            <button type="button" data-graph-depth="3">3 Ebenen</button>
+            <button type="button" data-graph-depth="99">Alle</button>
+          </div>
+          <div id="graph-rail-toggles" class="graph-rail-toggles" role="group" aria-label="Leiter anzeigen">
+            <label class="graph-rail-toggle graph-conductor-l1"><input type="checkbox" data-graph-rail="L1" checked><span>L1</span></label>
+            <label class="graph-rail-toggle graph-conductor-l2"><input type="checkbox" data-graph-rail="L2" checked><span>L2</span></label>
+            <label class="graph-rail-toggle graph-conductor-l3"><input type="checkbox" data-graph-rail="L3" checked><span>L3</span></label>
+            <label class="graph-rail-toggle graph-conductor-n"><input type="checkbox" data-graph-rail="N" checked><span>N</span></label>
+            <label class="graph-rail-toggle graph-conductor-pe"><input type="checkbox" data-graph-rail="PE" checked><span>PE</span></label>
+          </div>
+          <label class="graph-flag"><input id="graph-flagged" type="checkbox"><span>nur Auffälligkeiten</span></label>
+        </div>
+        <details id="graph-review" class="graph-review"><summary>Prüfliste <span id="graph-review-count" class="graph-review-count"></span></summary><div id="graph-review-items" class="graph-review-items"></div></details>
+        <div class="graph-legend" aria-hidden="true"><span class="graph-key graph-phase-key">Leiter L1 · L2 · L3 · N · PE</span><span class="graph-key graph-fi">FI</span><span class="graph-key graph-fuse">Sicherung</span><span class="graph-key graph-terminal">Klemme</span><span class="graph-key graph-channel">Gerät · Kanal</span><span class="graph-key graph-load">Verbraucher</span></div>
+        <div id="graph-canvas" class="graph-canvas graph-scroll"></div>
+        <div id="graph-hscroll" class="graph-hscroll" aria-hidden="true"><div></div></div>
+      </section>
+
+      <section id="overview-list" class="overview-list" hidden>
+        <div class="overview-list-heading">
+          <div><p class="section-tag">ÜBERSICHT</p><h2 id="overview-title"></h2><p id="overview-count" class="detail-subtitle"></p></div>
+          <div class="overview-list-actions">
+            <button id="add-device" class="button button-primary review-only" type="button" hidden>+ Gerät hinzufügen</button>
+            <button id="add-fuse" class="button button-primary review-only" type="button" hidden>+ Neue Sicherung</button>
+            <button id="add-terminal-overview" class="button button-primary review-only" type="button" hidden>+ Klemme hinzufügen</button>
+            <button id="add-location" class="button button-primary review-only" type="button" hidden>+ Ort hinzufügen</button>
+            <button id="add-load" class="button button-primary review-only" type="button" hidden>+ Neuer Verbraucher</button>
+          </div>
+        </div>
+        <div id="overview-location-filters" class="search-filters overview-location-filters" role="group" aria-label="Klemmen nach Ort filtern" hidden></div>
+        <div id="overview-items" class="overview-items"></div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="device-dialog" class="dialog">
+    <form id="device-form" method="dialog">
+      <div class="dialog-head"><div><p class="section-tag">GERÄT</p><h2 id="device-dialog-title">Gerät hinzufügen</h2></div><button class="icon-close" type="button" data-close="device-dialog" aria-label="Schließen">×</button></div>
+      <input name="device_id" type="hidden">
+      <div class="form-grid">
+        <label class="form-wide">Gerätename<input name="name" required maxlength="500" autocomplete="off" placeholder="z. B. Zeitschaltuhr"></label>
+        <label>Hersteller<input name="manufacturer" maxlength="500" autocomplete="off" placeholder="Optional"></label>
+        <label>Produkt / Typ<input name="product" maxlength="500" autocomplete="off" placeholder="Optional"></label>
+        <label class="form-wide">Ort<input name="location" maxlength="500" autocomplete="off" placeholder="Optional"></label>
+        <label class="form-wide">Beschreibung<input name="description" maxlength="500" autocomplete="off" placeholder="Optional"></label>
+      </div>
+      <p class="form-error" id="device-error" role="alert"></p>
+      <div class="dialog-actions"><button id="delete-device" class="button button-danger" type="button" hidden>Gerät löschen</button><button class="button button-secondary" type="button" data-close="device-dialog">Abbrechen</button><button id="device-submit" class="button button-primary" type="submit">Gerät anlegen</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="device-channel-dialog" class="dialog">
+    <form id="device-channel-form" method="dialog">
+      <div class="dialog-head"><div><p class="section-tag">MANUELLES GERÄT</p><h2 id="device-channel-title">Kanal hinzufügen</h2></div><button class="icon-close" type="button" data-close="device-channel-dialog" aria-label="Schließen">×</button></div>
+      <input name="device_id" type="hidden">
+      <input name="object_number" type="hidden">
+      <div class="form-grid">
+        <label class="form-wide">Kanalname oder Nummer<input name="physical_channel" required maxlength="100" autocomplete="off" placeholder="z. B. Ausgang 1"></label>
+        <label class="form-wide">Beschreibung<input name="name" maxlength="500" autocomplete="off" placeholder="Optional, z. B. USV-Versorgung"></label>
+      </div>
+      <p class="form-error" id="device-channel-error" role="alert"></p>
+      <div class="dialog-actions"><button id="delete-device-channel" class="button button-danger" type="button" hidden>Kanal löschen</button><button class="button button-secondary" type="button" data-close="device-channel-dialog">Abbrechen</button><button id="device-channel-submit" class="button button-primary" type="submit">Kanal anlegen</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="assignment-dialog" class="dialog">
+    <form id="assignment-form" method="dialog">
+      <div class="dialog-head"><div><p class="section-tag">SCHALTSCHRANK</p><h2 id="assignment-title">Klemme zuordnen</h2></div><button class="icon-close" type="button" data-close="assignment-dialog" aria-label="Schließen">×</button></div>
+      <input name="terminal_id" type="hidden">
+      <div class="form-grid">
+        <label class="channel-assignment-field">Geräte-ID<input name="device_id" required placeholder="1.1.5" autocomplete="off"></label>
+        <label class="channel-assignment-field">Kanalnummer<input name="object_number" required placeholder="0" autocomplete="off"></label>
+        <label class="autocomplete-field">Ort der Klemme<input name="location" data-suggestions="locations" required placeholder="Technikraum" autocomplete="off"><div class="autocomplete-popup" role="listbox" hidden></div></label>
+        <label class="autocomplete-field">Klemmen-Nummer<input name="terminal_number" required inputmode="numeric" placeholder="34" autocomplete="off" aria-autocomplete="list" aria-expanded="false"><div class="autocomplete-popup" data-terminal-suggestions hidden role="listbox" aria-label="Vorhandene Klemmen"></div></label>
+        <label class="autocomplete-field">Position<input name="position" data-suggestions="positions" maxlength="20" placeholder="u, o, li …" autocomplete="off"><div class="autocomplete-popup" role="listbox" hidden></div></label>
+        <label class="terminal-used-field"><input name="used" type="checkbox" checked><span>In Verwendung</span></label>
+        <label class="form-wide color-field">Aderfarbe<input id="wire-color-value" name="wire_color" type="hidden" value="bk"><span id="wire-color-options" class="wire-color-options" role="radiogroup" aria-label="Aderfarbe"></span></label>
+        <label class="form-wide autocomplete-field terminal-fuse-field">Sicherung (vorhandene, aus jedem Raum)<input name="fuse" data-suggestions="fuses" placeholder="Sa 1 – leer: keine Sicherung" autocomplete="off"><input name="fuse_id" type="hidden"><div class="autocomplete-popup" role="listbox" hidden></div></label>
+        <label class="form-wide">Beschreibung<input name="description" placeholder="Optional" autocomplete="off"></label>
+      </div>
+      <p class="form-error" id="assignment-error" role="alert"></p>
+      <div class="dialog-actions"><button id="delete-terminal-button" class="button button-danger" type="button" hidden>Klemme löschen</button><button class="button button-secondary" type="button" data-close="assignment-dialog">Abbrechen</button><button id="assignment-submit" class="button button-primary" type="submit">Zuordnung speichern</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="graph-pdf-dialog" class="dialog">
+    <form id="graph-pdf-form" method="dialog">
+      <div class="dialog-head"><div><p class="section-tag">GESAMTGRAPH</p><h2>Als PDF speichern</h2></div><button class="icon-close" type="button" data-close="graph-pdf-dialog" aria-label="Schließen">×</button></div>
+      <p class="dialog-copy">Der Graph wird so gedruckt, wie er gerade angezeigt wird (Darstellung, Ort, Filter, eingeklappte Teile), auf die Seitenbreite verkleinert und zwischen den Boxen auf Seiten verteilt. Im Druckdialog des Browsers „Als PDF sichern“ wählen; Ränder und Skalierung dort auf „Standard“ lassen.</p>
+      <div class="form-grid">
+        <label>Papierformat<select name="paper"><option value="A4">A4</option><option value="A3">A3</option><option value="A5">A5</option><option value="letter">Letter</option></select></label>
+        <label>Ausrichtung<select name="orientation"><option value="portrait">Hochformat</option><option value="landscape">Querformat</option></select></label>
+        <label>Rand (mm)<input name="margin" type="number" min="0" max="30" step="1"></label>
+        <label>Größe<select name="scale"><option value="fit">An Seitenbreite anpassen</option><option value="100">100 % (höchstens Seitenbreite)</option><option value="75">75 % (höchstens Seitenbreite)</option><option value="50">50 % (höchstens Seitenbreite)</option></select></label>
+        <label class="form-wide">Spalten je Zeile<select name="columns"><option value="4">4 Boxen, längere Pfade brechen um und gehen in Spalte 2 weiter</option><option value="5">5 Boxen, dann Umbruch</option><option value="6">6 Boxen, dann Umbruch</option><option value="0">Alle in einer Zeile (kein Umbruch)</option></select></label>
+        <fieldset class="form-wide graph-pdf-options"><legend>Auf jeder Seite / Inhalt</legend>
+          <label><input type="checkbox" name="header"> Kopfzeile (Ansicht, Filter, Datum)</label>
+          <label><input type="checkbox" name="numbers"> Seitenzahlen</label>
+          <label><input type="checkbox" name="legend"> Legende</label>
+          <label><input type="checkbox" name="review"> Prüfliste</label>
+        </fieldset>
+      </div>
+      <div class="dialog-actions"><button class="button button-secondary" type="button" data-close="graph-pdf-dialog">Abbrechen</button><button class="button button-primary" type="submit">PDF erstellen</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="fuse-edit-dialog" class="dialog">
+    <form id="fuse-edit-form" method="dialog">
+      <div class="dialog-head"><div><p class="section-tag">SICHERUNG</p><h2>Sicherung bearbeiten</h2></div><button class="icon-close" type="button" data-close="fuse-edit-dialog" aria-label="Schließen">×</button></div>
+      <input name="fuse_id" type="hidden">
+      <div class="form-grid">
+        <label id="fuse-location-field" class="form-wide autocomplete-field" hidden>Ort<input name="location" data-suggestions="locations" autocomplete="off" placeholder="Technikraum"><div class="autocomplete-popup" role="listbox" hidden></div></label>
+        <label>Bezeichnung<input name="label" required autocomplete="off" placeholder="Sa 2"></label>
+        <label>Nennstrom<input name="rating" autocomplete="off" placeholder="16 A"></label>
+        <label class="form-wide autocomplete-field">Vorhandenen FI auswählen<input name="existing_fi_display" data-suggestions="fiDevices" placeholder="Manuell eingeben / keinen FI auswählen" autocomplete="off"><input name="existing_fi_id" type="hidden"><div class="autocomplete-popup" role="listbox" hidden></div></label>
+        <label>FI-Nummer<input name="fi_number" autocomplete="off" placeholder="1"></label>
+        <label>FI-Bezeichnung<input name="fi_label" autocomplete="off" placeholder="z. B. Werkstatt"></label>
+        <div id="existing-fi-edit-controls" class="form-wide existing-fi-edit-controls" hidden>
+          <button id="edit-existing-fi" class="button button-small button-secondary" type="button">FI-Daten bearbeiten</button>
+          <p class="existing-fi-warning" hidden>Die Änderung von Nummer oder Bezeichnung gilt für alle Sicherungen, die diesem FI zugeordnet sind.</p>
+        </div>
+        <label class="form-wide">Beschreibung<input name="description" autocomplete="off" placeholder="Optional"></label>
+        <fieldset class="form-wide phase-fieldset"><legend>Phasen</legend><div class="phase-options">
+          <label><input type="checkbox" name="phases" value="L1"> L1</label>
+          <label><input type="checkbox" name="phases" value="L2"> L2</label>
+          <label><input type="checkbox" name="phases" value="L3"> L3</label>
+        </div></fieldset>
+      </div>
+      <p class="form-error" id="fuse-edit-error" role="alert"></p>
+      <div class="dialog-actions"><button id="delete-fuse-button" class="button button-danger" type="button" hidden>Sicherung löschen</button><button class="button button-secondary" type="button" data-close="fuse-edit-dialog">Abbrechen</button><button class="button button-primary" type="submit">Sicherung speichern</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="load-dialog" class="dialog">
+    <form id="load-form" method="dialog">
+      <div class="dialog-head"><div><p class="section-tag">VERBRAUCHER</p><h2 id="load-title">Verbraucher bearbeiten</h2></div><button class="icon-close" type="button" data-close="load-dialog" aria-label="Schließen">×</button></div>
+      <input name="load_id" type="hidden">
+      <div class="form-grid">
+        <label class="form-wide">Name<input name="name" required maxlength="500" autocomplete="off" placeholder="z. B. Steckdose Werkstatt"></label>
+        <label class="form-wide">Beschreibung<input name="description" maxlength="500" autocomplete="off" placeholder="Optional"></label>
+        <label class="form-wide load-no-pe-field"><input name="no_pe" type="checkbox"> <span>Kein PE-Anschluss (z. B. Schutzklasse II, Stellantrieb) – „PE fehlt“ entfällt</span></label>
+        <div class="form-wide path-add-kinds load-create-only" role="radiogroup" aria-label="Gespeist von" hidden>
+          <label><input type="radio" name="feed" value="terminal" checked> Klemme</label>
+          <label><input type="radio" name="feed" value="fuse"> Sicherung (direkt)</label>
+        </div>
+        <fieldset class="form-wide load-create-only" data-load-feed="terminal" hidden><legend>Gespeist von Klemme (vorhanden)</legend>
+          <label class="autocomplete-field">Ort der Klemme<input name="location" data-suggestions="locations" autocomplete="off" placeholder="Technikraum"><div class="autocomplete-popup" role="listbox" hidden></div></label>
+          <label>Klemmen-Nummer<input name="terminal_number" autocomplete="off" placeholder="34"></label>
+          <label>Buchstabe / Position<input name="position" maxlength="20" autocomplete="off" placeholder="o, u, A"></label>
+        </fieldset>
+        <fieldset class="form-wide load-create-only" data-load-feed="fuse" hidden><legend>Direkt an Sicherung (vorhanden, aus jedem Raum)</legend>
+          <label class="form-wide autocomplete-field">Sicherung<input name="fuse" data-suggestions="fuses" autocomplete="off" placeholder="Sa 1"><input name="fuse_id" type="hidden"><div class="autocomplete-popup" role="listbox" hidden></div></label>
+        </fieldset>
+        <p class="form-wide path-add-hint load-create-only" hidden>Ein Verbraucher hängt an einer Klemme (meist der L-Klemme) oder direkt an einer Sicherung (sein L). N und PE ergänzt du danach auf der Klemmen- bzw. Sicherungs-Seite über „N fehlt“ / „PE fehlt“.</p>
+      </div>
+      <p class="form-error" id="load-error" role="alert"></p>
+      <div class="dialog-actions"><button id="delete-load" class="button button-danger" type="button">Verbraucher löschen</button><button class="button button-secondary" type="button" data-close="load-dialog">Abbrechen</button><button class="button button-primary" type="submit">Speichern</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="fi-dialog" class="dialog">
+    <form id="fi-form" method="dialog">
+      <div class="dialog-head"><div><p class="section-tag">FI</p><h2>FI bearbeiten</h2></div><button class="icon-close" type="button" data-close="fi-dialog" aria-label="Schließen">×</button></div>
+      <input name="fi_id" type="hidden">
+      <div class="form-grid">
+        <label>FI-Nummer<input name="number" maxlength="20" autocomplete="off" placeholder="1"></label>
+        <label>FI-Bezeichnung<input name="label" maxlength="500" autocomplete="off" placeholder="z. B. Werkstatt"></label>
+        <p class="form-wide existing-fi-warning">Die Änderung gilt für alle Sicherungen dieses FI.</p>
+      </div>
+      <p class="form-error" id="fi-error" role="alert"></p>
+      <div class="dialog-actions"><button id="delete-fi" class="button button-danger" type="button">FI löschen</button><button class="button button-secondary" type="button" data-close="fi-dialog">Abbrechen</button><button class="button button-primary" type="submit">Speichern</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="location-dialog" class="dialog">
+    <form id="location-form" method="dialog">
+      <div class="dialog-head"><div><p class="section-tag">ORT</p><h2 id="location-dialog-title">Ort bearbeiten</h2></div><button class="icon-close" type="button" data-close="location-dialog" aria-label="Schließen">×</button></div>
+      <input name="location_id" type="hidden">
+      <div class="form-grid">
+        <label class="form-wide">Name<input name="name" required maxlength="500" autocomplete="off" placeholder="z. B. Technikraum"></label>
+        <label class="form-wide">Beschreibung<input name="description" maxlength="500" autocomplete="off" placeholder="Optional"></label>
+      </div>
+      <p class="form-error" id="location-error" role="alert"></p>
+      <div class="dialog-actions"><button id="delete-location" class="button button-danger" type="button" hidden>Ort löschen</button><button class="button button-secondary" type="button" data-close="location-dialog">Abbrechen</button><button id="location-submit" class="button button-primary" type="submit">Speichern</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="path-add-dialog" class="dialog">
+    <form id="path-add-form" method="dialog">
+      <div class="dialog-head"><div><p class="section-tag">KLEMMENPFAD</p><h2 id="path-add-title">Am Pfadende hinzufügen</h2></div><button class="icon-close" type="button" data-close="path-add-dialog" aria-label="Schließen">×</button></div>
+      <input name="terminal_id" type="hidden"><input name="node_id" type="hidden"><input name="fuse_id" type="hidden"><input name="feed_load_id" type="hidden"><input name="feed_role" type="hidden"><input name="insert_node_id" type="hidden"><input name="replace_node_id" type="hidden">
+      <p id="path-add-from" class="path-add-from"></p>
+      <div class="path-add-kinds" role="radiogroup" aria-label="Art des Eintrags">
+        <label><input type="radio" name="kind" value="terminal" checked> Klemme</label>
+        <label><input type="radio" name="kind" value="channel"> Gerät · Kanal</label>
+        <label><input type="radio" name="kind" value="load"> Verbraucher</label>
+      </div>
+      <div class="form-grid" data-path-panel="terminal">
+        <label class="form-wide autocomplete-field">Ort der Klemme<input name="path_location" data-suggestions="locations" placeholder="Technikraum" autocomplete="off"><div class="autocomplete-popup" role="listbox" hidden></div></label>
+        <label class="picker-field">Klemmen-Nummer<input name="path_terminal_number" data-terminal-side="path" placeholder="34" autocomplete="off"><div class="picker-options" data-terminal-options="path" hidden></div></label>
+        <label>Buchstabe / Position<input name="path_position" maxlength="20" placeholder="o, u, A" autocomplete="off"></label>
+        <label class="form-wide picker-color-label">Aderfarbe<input name="path_wire_color" type="hidden"><span class="picker-wire-options" data-terminal-colors="path" role="radiogroup" aria-label="Aderfarbe"></span></label>
+        <p class="form-wide path-add-hint">Vorhandene Klemme aus der Liste wählen oder eine neue eintragen – sie wird beim Speichern angelegt.</p>
+        <label class="form-wide feed-neutral-field" hidden>Oder ohne Klemme direkt an<select name="feed_conductor"><option value="">– mit Klemme (oben eintragen) –</option></select></label>
+      </div>
+      <div class="form-grid" data-path-panel="channel" hidden>
+        <label class="form-wide picker-field">Vorhandenen Kanal suchen<input name="channel_search" placeholder="Gerät, Kanal oder Produkt" autocomplete="off"><div class="picker-options" data-path-channel-options hidden></div></label>
+        <input name="device_id" type="hidden"><input name="object_number" type="hidden">
+        <fieldset class="form-wide path-add-new"><legend>Oder neu anlegen</legend>
+          <label>Gerät<input name="device_name" placeholder="z. B. Heizungspumpe" autocomplete="off"></label>
+          <label>Kanal<input name="channel_name" placeholder="z. B. A" autocomplete="off"></label>
+        </fieldset>
+        <p class="form-wide path-add-hint">Ein gleichnamiges manuelles Gerät und Kanal werden wiederverwendet, sonst neu angelegt.</p>
+      </div>
+      <div class="form-grid" data-path-panel="load" hidden>
+        <label class="form-wide picker-field">Vorhandenen Verbraucher suchen<input name="load_search" placeholder="Name, Ort oder Kabel" autocomplete="off"><div class="picker-options" data-path-load-options hidden></div></label>
+        <input name="load_id" type="hidden">
+        <fieldset class="form-wide path-add-new"><legend>Oder neu anlegen</legend>
+          <label class="form-wide">Verbraucher<input name="load_name" placeholder="z. B. Steckdose Werkstatt" maxlength="500" autocomplete="off"></label>
+        </fieldset>
+        <p class="form-wide path-add-hint">Der Verbraucher ist der Endpunkt: er wird hinter der letzten Klemme des Pfads angeschlossen (an einer Sicherung direkt an ihr). Ein neuer Verbraucher bekommt Ort und Klemmen-Nummer dieser Klemme.</p>
+      </div>
+      <p class="form-error" id="path-add-error" role="alert"></p>
+      <div class="dialog-actions"><button class="button button-secondary" type="button" data-close="path-add-dialog">Abbrechen</button><button class="button button-primary" type="submit">Hinzufügen</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="import-dialog" class="dialog import-dialog">
+    <div class="dialog-head"><div><p class="section-tag">DATENPFLEGE</p><h2>Klemmen aus Excel</h2></div><button class="icon-close" type="button" data-close="import-dialog" aria-label="Schließen">×</button></div>
+    <div id="import-step-upload" class="import-step">
+      <p class="dialog-copy">Excel-Datei im Format .xlsx auswählen. Die Zuordnungen werden vor dem Speichern geprüft.</p>
+      <label class="file-drop" for="xlsx-file"><span class="file-glyph" aria-hidden="true">↑</span><span><b>Datei auswählen</b><small id="file-name">Keine Datei ausgewählt</small></span><input id="xlsx-file" type="file" accept=".xlsx"></label>
+      <a class="template-link" href="api/import/template">Vorlage herunterladen <span aria-hidden="true">↗</span></a>
+      <p class="form-error" id="import-error" role="alert"></p>
+      <div class="dialog-actions"><button class="button button-secondary" type="button" data-close="import-dialog">Schließen</button><button id="preview-import" class="button button-primary" type="button" disabled>Prüfen</button></div>
+    </div>
+    <div id="import-step-preview" class="import-step" hidden>
+      <div class="preview-summary" id="preview-summary"></div>
+      <div class="preview-table-wrap"><table class="preview-table"><thead><tr><th>Zeile</th><th>Gerät / Kanal</th><th>Ort / Klemme</th><th>Farbe / Sicherung</th><th>Prüfung</th></tr></thead><tbody id="preview-rows"></tbody></table></div>
+      <p class="form-error" id="apply-error" role="alert"></p>
+      <div class="dialog-actions"><button id="back-to-upload" class="button button-secondary" type="button">Zurück</button><button id="apply-import" class="button button-primary" type="button">Gültige Zuordnungen speichern</button></div>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

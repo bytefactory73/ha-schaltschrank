@@ -1,0 +1,1085 @@
+:root {
+  color-scheme: light;
+  --pine: #15372e;
+  --pine-deep: #102b24;
+  --leaf: #447c62;
+  --leaf-pale: #e2eee6;
+  --citrus: #e3bd50;
+  --paper: #f2f4ef;
+  --white: #fff;
+  --ink: #1c2823;
+  --muted: #77827c;
+  --line: #dce2dc;
+  --red: #b6503b;
+  --font: "Bahnschrift", "Segoe UI Variable", "Segoe UI", sans-serif;
+  font-family: var(--font);
+  color: var(--ink);
+  background: var(--paper);
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+body { zoom: 1.35; margin: 0; min-width: 237px; min-height: 100vh; background: var(--paper); }
+button, input { font: inherit; }
+button { color: inherit; }
+[hidden] { display: none !important; }
+.app-shell { min-height: 100vh; }
+.brand-row { width: 100%; display: flex; gap: 13px; align-items: center; border: 0; padding: 3px 7px 35px; color: inherit; background: transparent; font: inherit; text-align: left; cursor: pointer; }
+.brand-row:focus-visible { outline: 2px solid var(--citrus); outline-offset: 3px; }
+.brand-row:hover .brand-title { color: var(--citrus); }
+.brand-mark { display: flex; align-items: flex-end; gap: 3px; width: 30px; height: 29px; padding: 4px; border: 1px solid rgba(255,255,255,.38); }
+.brand-mark span { flex: 1; background: var(--citrus); }
+.brand-mark span:nth-child(1) { height: 45%; }.brand-mark span:nth-child(2) { height: 75%; }.brand-mark span:nth-child(3) { height: 100%; }
+.brand-kicker, .section-tag { margin: 0 0 5px; font-size: 10px; font-weight: 750; letter-spacing: .12em; color: #92ac9e; }
+.brand-copy { display: grid; gap: 4px; }
+.brand-title { color: white; font-size: 20px; font-weight: 600; }
+.search-box { display: flex; align-items: center; height: 47px; border: 1px solid rgba(255,255,255,.2); background: rgba(4,24,18,.22); padding: 0 10px; }
+.search-glyph { margin-right: 8px; color: var(--citrus); font-size: 25px; line-height: 1; transform: rotate(-20deg); }
+.search-box input { width: 100%; min-width: 0; border: 0; outline: 0; color: white; background: transparent; font-size: 12px; }
+.search-box input::placeholder { color: #9bafa4; }
+.search-box kbd { padding: 2px 4px; border: 1px solid rgba(255,255,255,.2); color: #9bafa4; font-size: 9px; }
+.search-filters { display: flex; flex-wrap: wrap; gap: 5px; padding: 7px 0 3px; }
+.search-filters[hidden] { display: none; }
+.search-filter { display: inline-flex; align-items: center; gap: 7px; min-height: 27px; padding: 4px 7px; border: 1px solid rgba(255,255,255,.2); color: #d7e1db; background: rgba(4,24,18,.2); font-size: 10px; cursor: pointer; }
+.search-filter:hover, .search-filter:focus-visible { outline: 0; border-color: var(--citrus); }
+.search-filter.selected { border-color: var(--citrus); color: #17261d; background: var(--citrus); }
+.search-filter span { color: inherit; font-size: 9px; font-weight: 750; }
+.overview-location-filters { padding: 0 0 14px; }
+.overview-location-filters .search-filter { border-color: var(--line); color: var(--pine); background: rgba(255,255,255,.68); }
+.overview-location-filters .search-filter:hover, .overview-location-filters .search-filter:focus-visible { border-color: var(--leaf); background: #e7efe8; }
+.overview-location-filters .search-filter.selected { border-color: var(--pine); color: white; background: var(--pine); }
+.search-caption { min-height: 30px; display: flex; align-items: center; gap: 7px; padding-left: 3px; color: #a6b9ae; font-size: 10px; }
+.live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--citrus); box-shadow: 0 0 0 3px rgba(227,189,80,.12); }
+.results { min-height: 0; flex: 1; overflow: auto; margin: 0 -22px; padding: 0 12px; scrollbar-color: #49695b transparent; scrollbar-width: thin; }
+.result-item { position: relative; display: grid; grid-template-columns: 74px minmax(0, 1fr) 12px; gap: 9px; align-items: center; width: 100%; min-height: 60px; padding: 8px 10px; border: 0; border-bottom: 1px solid rgba(255,255,255,.09); text-align: left; background: transparent; cursor: pointer; }
+.result-item:hover, .result-item:focus-visible { outline: 0; background: rgba(255,255,255,.09); }
+.result-type { color: #a4b6ab; font-size: 8px; font-weight: 750; letter-spacing: .06em; }
+.result-type-group { color: var(--citrus); }.result-type-terminal { color: #d7a996; }.result-type-location { color: #c4d09b; }.result-type-fuse { color: #edbd65; }
+.result-copy { min-width: 0; display: grid; gap: 4px; }
+.result-copy strong { min-width: 0; display: flex; align-items: center; gap: 5px; overflow: hidden; color: #f5f6f0; font-family: Consolas, monospace; font-size: 11px; font-weight: 600; }
+.result-copy strong > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.used-checkbox { display: inline-flex; flex: 0 0 auto; align-items: center; vertical-align: middle; }
+.used-checkbox > span { display: inline-grid; width: 13px; height: 13px; place-items: center; border: 1px solid #90a69a; border-radius: 3px; background: #fff; }
+.used-checkbox.is-used > span { border-color: #90a69a; color: #28704a; background: #fff; }
+.used-checkbox.is-used > span::after { content: "✓"; font-size: 10px; font-weight: 800; line-height: 1; }
+.terminal-unused { color: #98a19a !important; }
+.overview-terminal-element.terminal-unused .wire-chip { opacity: .72; }
+.result-terminal-color { flex: 0 0 auto; }
+.result-terminal-color .wire-chip { border: 0; padding: 0; color: #d7e1db; background: transparent; font-size: 8px; }
+.result-copy small { overflow: hidden; color: #9fb2a7; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.result-chevron { color: var(--citrus); font-size: 19px; }
+.empty-results { padding: 19px 10px; color: #9fb2a7; font-size: 11px; }
+.error-copy { color: #ffd0c5; }
+.database-mark { display: flex; align-items: center; gap: 8px; color: #b6c5bc; font-size: 10px; }
+.db-icon { display: inline-block; width: 10px; height: 10px; border: 1px solid var(--citrus); border-radius: 50%; box-shadow: inset 0 2px 0 -1px var(--citrus), inset 0 -2px 0 -1px var(--citrus); }
+.stats-line { display: flex; gap: 19px; margin: 11px 0 0 18px; color: #87a193; font-size: 10px; }
+.stats-line b { color: #f4f6ef; font-weight: 600; }
+.main-content { min-width: 0; min-height: 100vh; }
+.topbar { min-height: 92px; display: grid; grid-template-columns: minmax(185px, auto) minmax(220px, 1fr) auto; align-items: center; gap: 28px; padding: 10px 5.2%; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.72); }
+.topbar-brand-cluster { min-width: 0; display: grid; gap: 5px; }
+.brand-row { width: max-content; display: flex; gap: 10px; align-items: center; border: 0; padding: 0; color: var(--pine); background: transparent; font: inherit; text-align: left; cursor: pointer; }
+.brand-row:focus-visible { outline: 2px solid var(--leaf); outline-offset: 4px; }
+.brand-row:hover .brand-title { color: var(--leaf); }
+.brand-mark { width: 27px; height: 26px; border-color: #aebfb2; }
+.brand-mark span { background: var(--leaf); }
+.brand-copy { gap: 1px; }
+.brand-kicker { margin: 0; color: #78887d; font-size: 8px; }
+/* No title set (add-on option `titel`): only "Schaltschrank". */
+.brand-kicker:empty { display: none; }
+.brand-title { color: var(--pine); font-size: 16px; }
+.crumb { display: flex; align-items: center; gap: 7px; color: #64726a; font-size: 8px; font-weight: 750; letter-spacing: .1em; }
+.crumb-square { width: 7px; height: 7px; background: var(--leaf); }
+.crumb-slash { color: #bac3bc; }
+.main-search-control { width: 100%; max-width: 540px; justify-self: center; }
+.search-box { height: 42px; display: flex; align-items: center; border: 1px solid #cbd8cd; background: white; padding: 0 11px; box-shadow: 0 2px 8px rgba(21,55,46,.04); }
+.search-box:focus-within { border-color: var(--leaf); box-shadow: 0 0 0 3px rgba(68,124,98,.12); }
+.search-glyph { margin-right: 9px; color: var(--leaf); font-size: 23px; }
+.search-filter-tags { display: flex; flex: 0 0 auto; align-items: center; gap: 4px; }
+.search-filter-tag { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 5px; border: 1px solid #c8d9cc; border-radius: 999px; padding: 3px 5px 3px 8px; color: var(--pine); background: #edf4ee; font-size: 10px; font-weight: 650; white-space: nowrap; }
+.search-filter-tag button { width: 15px; height: 15px; display: grid; place-items: center; border: 0; border-radius: 50%; padding: 0; color: var(--pine); background: transparent; font: inherit; line-height: 1; cursor: pointer; }
+.search-filter-tag button:hover, .search-filter-tag button:focus-visible { outline: 0; color: white; background: var(--pine); }
+.search-box input { flex: 1 1 auto; width: 100%; min-width: 0; border: 0; outline: 0; color: var(--ink); background: transparent; font-size: 12px; }
+.search-box input::placeholder { color: #89968d; }
+.search-box kbd { padding: 2px 5px; border: 1px solid #dbe2dc; color: #78887d; font-size: 9px; }
+.main-search-control .search-caption { min-height: 17px; padding: 3px 0 0 3px; color: #78887d; font-size: 9px; }
+.main-search-control .live-dot { width: 5px; height: 5px; }
+.search-meta-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; }
+/* Right-aligned, also when the status line beside it is hidden. */
+.review-search-terms { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; margin-left: auto; }
+.search-review-term { border: 1px solid #d5dfd6; border-radius: 999px; padding: 2px 7px; color: var(--pine); background: rgba(255,255,255,.72); font: inherit; font-size: 9px; line-height: 1.3; cursor: pointer; }
+.search-review-term:hover, .search-review-term:focus-visible { outline: 0; border-color: var(--leaf); background: #e8f0e9; }
+.search-review-term.selected { border-color: var(--leaf); color: white; background: var(--leaf); }
+  .settings-toggle { width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid #c9d4cc; border-radius: 50%; color: var(--pine); background: transparent; font-size: 19px; cursor: pointer; transition: background .16s, border-color .16s, transform .16s; }
+  .settings-toggle:hover, .settings-toggle:focus-visible { outline: 0; border-color: var(--leaf); background: #eef4ef; transform: rotate(25deg); }
+  .settings-toggle:focus-visible { box-shadow: 0 0 0 3px rgba(79, 130, 99, .18); }
+.button { min-height: 36px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 0 13px; border: 1px solid transparent; font-size: 11px; font-weight: 650; cursor: pointer; transition: background .16s, transform .16s, border-color .16s; }
+.button:hover { transform: translateY(-1px); }
+.button:disabled { opacity: .48; cursor: not-allowed; transform: none; }
+.button-primary { color: white; background: var(--pine); }.button-primary:hover { background: #245543; }
+.button-secondary { color: var(--pine); border-color: #c9d4cc; background: transparent; }.button-secondary:hover { border-color: var(--leaf); background: #eef4ef; }
+.button-danger { color: #fff; border-color: #9d3c34; background: #9d3c34; }.button-danger:hover { border-color: #7e2d27; background: #7e2d27; }
+.welcome-view { min-height: calc(100vh - 92px); padding: 36px 5.2% 50px; background: linear-gradient(140deg, #f7f8f3, #edf2ec 68%, #e7eee8); }
+.settings-view { min-height: calc(100vh - 92px); padding: 42px 5.2% 60px; background: linear-gradient(140deg, #f7f8f3, #edf2ec 68%, #e7eee8); }
+.search-view { min-height: calc(100vh - 92px); padding: 34px 5.2% 60px; }
+.search-view-heading { display: flex; justify-content: space-between; align-items: end; margin-bottom: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.search-view-heading .section-tag { color: var(--leaf); }
+.search-view-heading h2 { margin: 5px 0 0; color: var(--pine-deep); font-family: Georgia, serif; font-size: 27px; font-weight: 400; }
+.search-view-heading h2 span { margin-left: 5px; color: #78887d; font-family: var(--font); font-size: 13px; font-weight: 600; }
+.search-view .search-filters { padding: 0 0 13px; }
+.search-view .search-filter { border-color: #d2ddd4; color: var(--pine); background: rgba(255,255,255,.68); }
+.search-view .search-filter:hover, .search-view .search-filter:focus-visible { border-color: var(--leaf); background: #e7efe8; }
+.search-view .search-filter.selected { border-color: var(--pine); color: white; background: var(--pine); }
+.search-view .results { min-height: 100px; margin: 0; overflow: visible; }
+.search-view .result-item { grid-template-columns: 105px minmax(0, 1fr) 18px; gap: 12px; min-height: 66px; border-bottom: 1px solid var(--line); padding: 10px 13px; background: rgba(255,255,255,.46); }
+.search-view .result-item:hover, .search-view .result-item:focus-visible { outline: 0; background: #e8f0e9; }
+.search-view .result-type { color: #6e8075; }
+.search-view .result-type-group { color: #987617; }.search-view .result-type-terminal { color: #9c6149; }.search-view .result-type-location { color: #687b3d; }.search-view .result-type-fuse { color: #a96d1a; }
+/* Verbraucher in their colour from the graph. */
+.search-view .result-type-load { color: #a2577a; }
+.search-view .result-type-homeassistant { color: #2f7fa8; }
+.search-view .result-copy strong { color: var(--pine); }
+.search-view .result-copy small { color: #77857b; }
+.search-view .result-terminal-color .wire-chip { color: #506056; }
+.search-view .result-chevron { color: var(--leaf); }
+.search-view .empty-results { padding: 22px 13px; color: #78887d; }
+.search-view .error-copy { color: var(--red); }
+  .settings-heading { margin-bottom: 24px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+  .settings-heading .section-tag { color: var(--leaf); }
+  .settings-heading h2 { margin: 6px 0; color: var(--pine-deep); font-family: Georgia, serif; font-size: 34px; font-weight: 400; }
+  .settings-heading .detail-subtitle { margin: 0; }
+  .settings-actions { max-width: 820px; display: grid; gap: 10px; }
+  .settings-action-card { min-height: 88px; display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; align-items: center; gap: 14px; border: 1px solid #d5dfd6; padding: 14px 16px; background: rgba(255, 255, 255, .56); }
+  .settings-action-icon { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; color: var(--leaf); background: #e6eee7; font-size: 19px; }
+  .settings-action-card h3 { margin: 0 0 4px; color: var(--pine); font-size: 13px; font-weight: 650; }
+  .settings-action-card p { margin: 0; color: #77857b; font-size: 10px; line-height: 1.45; }
+.settings-review-toggle { display: inline-flex; align-items: center; gap: 8px; color: var(--pine); font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer; }
+.settings-review-toggle input { width: 18px; height: 18px; margin: 0; accent-color: var(--leaf); }
+.home-overviews { margin: 0; padding: 0; }
+.home-overviews-heading { margin-bottom: 12px; }
+.home-overviews-heading .section-tag { margin-bottom: 4px; color: var(--leaf); }
+.home-overviews-heading h2 { margin: 0; color: var(--pine); font-size: 20px; font-weight: 600; }
+.home-overview-buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 8px; }
+.home-database-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; margin-top: 20px; padding-top: 12px; border-top: 1px solid var(--line); }
+.home-database-meta .database-mark { color: #78887d; }
+.home-database-meta .stats-line { margin: 0; color: #78887d; }
+.home-database-meta .stats-line b { color: var(--pine); }
+.overview-card { min-height: 76px; display: grid; grid-template-columns: 1fr auto; align-content: center; gap: 6px 10px; border: 1px solid #cbd8cd; padding: 10px 12px; color: var(--pine); background: rgba(255,255,255,.52); text-align: left; cursor: pointer; }
+.overview-card:hover, .overview-card:focus-visible { outline: 0; border-color: var(--leaf); background: #e4ede5; }
+.overview-card strong { font-size: 11px; font-weight: 650; }
+.overview-card-count { color: var(--leaf); font-family: Georgia, serif; font-size: 21px; line-height: 1; }
+.overview-card small { grid-column: 1 / -1; color: #77857b; font-size: 9px; }
+.overview-list { min-height: calc(100vh - 72px); padding: 42px 5.2% 60px; }
+.overview-list-heading { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin-bottom: 22px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+.overview-list-actions { display: flex; align-items: center; gap: 8px; }
+.overview-list-heading .section-tag { color: var(--leaf); }
+.overview-list-heading h2 { margin: 6px 0; color: var(--pine-deep); font-family: Georgia, serif; font-size: 34px; font-weight: 400; }
+
+/* Start page: entry to the whole-graph overview. */
+.graph-launch { width: 100%; margin-top: 8px; display: flex; align-items: center; gap: 16px; padding: 14px 16px; border: 1px solid var(--pine); color: white; background: linear-gradient(120deg, var(--pine), #1f4a3d); text-align: left; cursor: pointer; transition: background .16s, transform .16s; }
+.graph-launch:hover, .graph-launch:focus-visible { outline: 0; background: linear-gradient(120deg, var(--pine-deep), var(--pine)); transform: translateY(-1px); }
+.graph-launch-copy { flex: 1; display: grid; gap: 3px; }
+.graph-launch-copy strong { font-size: 13px; font-weight: 650; }
+.graph-launch-copy small { color: #b9cdc2; font-size: 10px; }
+.graph-launch-arrow { color: var(--citrus); font-size: 24px; line-height: 1; }
+/* Little tree glyph: one root, branching to three leaves. */
+.graph-launch-icon { position: relative; width: 38px; height: 30px; flex: none; }
+.graph-launch-icon i { position: absolute; width: 9px; height: 7px; background: var(--citrus); }
+.graph-launch-icon i:nth-child(1) { left: 0; top: 11px; }
+.graph-launch-icon i:nth-child(2) { right: 0; top: 0; background: #9fc7b0; }
+.graph-launch-icon i:nth-child(3) { right: 0; top: 11px; background: #9fc7b0; }
+.graph-launch-icon i:nth-child(4) { right: 0; top: 22px; background: #9fc7b0; }
+.graph-launch-icon::before { content: ""; position: absolute; left: 9px; top: 3px; width: 20px; height: 22px; border: 1.5px solid #6f9783; border-left: 0; border-right: 0; }
+
+/* Gesamtgraph page. */
+/* `--klemme-width`: every Klemme card (and N/PE row) in the graph is as narrow as a Sicherung. */
+.graph-view { --graph-wire: #b3c4b9; --graph-gap: 22px; --klemme-width: 124px; }
+.graph-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; }
+.graph-filter { flex: 1 1 280px; max-width: 460px; display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 11px; border: 1px solid #cbd8cd; background: white; color: var(--muted); }
+.graph-filter:focus-within { border-color: var(--leaf); box-shadow: 0 0 0 2px rgba(68,124,98,.15); }
+.graph-filter input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; font-size: 12px; }
+/* PDF export next to the title: A4 format and the button. */
+.graph-pdf { display: flex; align-items: center; gap: 8px; }
+.graph-pdf .graph-select { height: 34px; min-width: 0; }
+.graph-select { height: 38px; min-width: 150px; padding: 0 10px; border: 1px solid #cbd8cd; background: white; color: var(--pine); font: inherit; font-size: 12px; }
+.graph-levels { display: inline-flex; border: 1px solid #cbd8cd; background: white; }
+.graph-levels button { height: 36px; padding: 0 13px; border: 0; border-right: 1px solid #e1e8e2; background: transparent; color: var(--pine); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
+.graph-levels button:last-child { border-right: 0; }
+.graph-levels button:hover { background: #eef4ef; }
+.graph-levels button[aria-pressed="true"] { color: white; background: var(--pine); }
+.graph-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 22px; color: var(--muted); font-size: 10px; }
+.graph-key { display: inline-flex; align-items: center; gap: 6px; }
+.graph-key::before { content: ""; width: 9px; height: 9px; background: var(--graph-accent); }
+.graph-fi { --graph-accent: var(--pine); }
+.graph-fuse { --graph-accent: var(--citrus); }
+.graph-terminal { --graph-accent: var(--leaf); }
+.graph-channel { --graph-accent: #5f84ad; }
+.graph-group { margin-bottom: 30px; width: max-content; min-width: 100%; }
+.graph-group h3 { margin: 0 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--line); color: var(--pine-deep); font-family: Georgia, serif; font-size: 20px; font-weight: 400; }
+.graph-trees { display: grid; gap: 18px; padding-bottom: 8px; }
+/* One scroll area for the whole graph, so both scrollbars stay visible at the window edge. */
+/* The page scrolls vertically; a sticky bar at the window bottom scrolls the graph sideways. */
+.graph-scroll { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+.graph-scroll::-webkit-scrollbar { display: none; }
+.graph-hscroll { position: sticky; bottom: 0; z-index: 5; overflow-x: scroll; overflow-y: hidden; height: 16px; border-top: 1px solid var(--line); background: #e8efe9; scrollbar-width: auto; scrollbar-color: #9bb5a5 #e8efe9; }
+.graph-hscroll::-webkit-scrollbar { height: 12px; }
+.graph-hscroll::-webkit-scrollbar-track { background: #e8efe9; }
+.graph-hscroll::-webkit-scrollbar-thumb { border: 2px solid #e8efe9; border-radius: 6px; background: #9bb5a5; }
+.graph-hscroll::-webkit-scrollbar-thumb:hover { background: #6f9783; }
+.graph-hscroll > div { height: 1px; }
+.graph-hscroll[hidden] { display: none; }
+.graph-scroll .graph-group { padding: 12px 0 0 14px; }
+/* PDF export (printGraph): only title, summary, legend and the whole graph, unzoomed and unclipped, in colour. */
+/* White paper instead of the page colour (cards keep their fills). */
+body.graph-printing { zoom: 1; min-width: 0; min-height: 0; background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body.graph-printing *:not(:has(#graph-view)):not(#graph-view):not(#graph-view *) { display: none !important; }
+body.graph-printing :has(#graph-view) { display: block !important; width: max-content !important; max-width: none !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; border: 0 !important; box-shadow: none !important; background: white !important; }
+body.graph-printing #graph-view { width: max-content; min-height: 0; margin: 0; padding: 18px 22px; background: white; }
+body.graph-printing #graph-view .graph-toolbar, body.graph-printing .graph-review, body.graph-printing .graph-hscroll, body.graph-printing .graph-pdf,
+body.graph-printing .graph-toggle { display: none !important; }
+body.graph-printing .graph-scroll { overflow: visible; width: max-content; }
+/* Options of the PDF dialog: legend and Prüfliste (the list is printed open and in full). */
+body.graph-printing.graph-print-no-legend .graph-legend { display: none !important; }
+body.graph-printing.graph-print-review .graph-review { display: block !important; }
+body.graph-printing.graph-print-review .graph-review-items { max-height: none; overflow: visible; }
+/* Pages of the print: once built, they replace the graph; each one a header, a clipped copy of the graph shifted
+   to its part (drawn smaller by a transform, laid out at full size) and the page number. */
+body.graph-printing #graph-view:has(> .graph-print-pages) { padding: 0; border: 0; box-shadow: none; }
+body.graph-printing #graph-view:has(> .graph-print-pages) > :not(.graph-print-pages) { display: none !important; }
+.graph-print-sheet { display: flex; flex-direction: column; break-after: page; break-inside: avoid; }
+.graph-print-sheet:last-child { break-after: auto; }
+.graph-print-head, .graph-print-foot { flex: none; display: flex; justify-content: space-between; gap: 12px; box-sizing: border-box; color: #59665e; font-size: 9px; }
+.graph-print-head { height: 26px; align-items: center; margin-bottom: 0; border-bottom: 1px solid #d3ddd5; }
+.graph-print-foot { height: 18px; align-items: flex-end; justify-content: flex-end; }
+/* `contain` makes the page one unbreakable block: else the browser still splits the whole copy inside it into pages
+   and pushes boxes over those inner page ends down, away from their wires. */
+.graph-print-clip { flex: none; overflow: hidden; contain: size layout paint; }
+.graph-print-shift { width: max-content; padding: 18px 22px; transform-origin: 0 0; }
+body.graph-printing .graph-conductor-band, body.graph-printing .graph-load-head { position: static; }
+/* No shadows on paper: they reach past the boxes and would show as slivers over a page cut. */
+body.graph-printing #graph-view * { box-shadow: none !important; }
+/* Paper: more contrast than the screen. Darker text, borders and connector lines; full taps; the line colours
+   themselves are darkened in app.js (graphInk). */
+body.graph-printing { --ink: #000; --muted: #3a443f; --paper: #fff; --line: #8c978f; }
+body.graph-printing #graph-view { --graph-wire: #4a574f; }
+body.graph-printing .graph-card, body.graph-printing .graph-klemmen-box { border-top-color: #7a877f; border-right-color: #7a877f; border-bottom-color: #7a877f; }
+body.graph-printing .graph-klemmen-box .graph-card { border-color: transparent; }
+body.graph-printing .graph-klemmen-box > :not(:first-child), body.graph-printing .graph-klemmen-box > .graph-card:first-child { border-top-color: #a3ada6; }
+body.graph-printing .graph-fuse { --graph-accent: #a8800f; }
+body.graph-printing .graph-terminal { --graph-accent: #2f5e48; }
+body.graph-printing .graph-card-main strong { color: #000; }
+body.graph-printing .graph-card.is-unused .graph-card-main strong { color: #646d68; }
+body.graph-printing .graph-phase-l3 { color: #3f4844; }
+body.graph-printing .graph-phase-pe { color: #356212; }
+body.graph-printing .graph-join-missing, body.graph-printing .graph-feed-missing { border-color: #a0402c; color: #8a2614; }
+body.graph-printing .graph-tap, body.graph-printing .graph-tap-feed { opacity: 1; stroke-width: 1.5; }
+body.graph-printing .graph-wire-label, body.graph-printing .graph-tap-label { stroke: #fff; }
+/* Print column limit: a row too long breaks onto a new line below its card, continuing in column 2 (graphFixWraps
+   sets the position); its wire: out of the card to the right and down (graph-wrap-out), back left above the new
+   line (::before) and down into it (::after). */
+.graph-node.graph-node-wrap { flex-direction: column; align-items: flex-start; }
+.graph-wrap { position: relative; }
+/* Border boxes: the exit's right border ends 11px behind the card and stops at the wire back, which runs to that
+   same outer edge and so closes the corner (no overhang in either direction). */
+.graph-wrap-out { position: absolute; left: var(--wrap-card); top: var(--wrap-lane); width: 11px; height: calc(var(--wrap-mid) - var(--wrap-lane)); border-top: 1.5px solid var(--graph-wire); border-right: 1.5px solid var(--graph-wire); }
+.graph-wrap::before { content: ""; position: absolute; left: 0; top: var(--wrap-mid); width: calc(var(--wrap-card) + 11px); border-top: 1.5px solid var(--graph-wire); }
+.graph-wrap::after { content: ""; position: absolute; left: 0; top: var(--wrap-mid); height: calc(var(--wrap-stub) - var(--wrap-mid)); border-left: 1.5px solid var(--graph-wire); }
+.graph-tree { width: max-content; }
+/* A card on the left, its followers stacked on the right; the lines are drawn with borders. */
+.graph-node { display: flex; align-items: center; }
+.graph-children { position: relative; display: flex; flex-direction: column; margin-left: var(--graph-gap); }
+.graph-children::before { content: ""; position: absolute; top: 50%; left: calc(var(--graph-gap) * -1); width: var(--graph-gap); border-top: 1.5px solid var(--graph-wire); }
+.graph-child { position: relative; padding: 3px 0 3px var(--graph-gap); }
+.graph-child::before { content: ""; position: absolute; top: 50%; left: 0; width: var(--graph-gap); border-top: 1.5px solid var(--graph-wire); }
+.graph-child::after { content: ""; position: absolute; top: 0; bottom: 0; left: 0; border-left: 1.5px solid var(--graph-wire); }
+.graph-child:first-child::after { top: 50%; }
+.graph-child:last-child::after { bottom: 50%; }
+.graph-child:only-child::after { display: none; }
+/* Phase label sitting just above the wire stub into a card; conductor colours L1 brown, L2 black, L3 grey. */
+.graph-phase { position: absolute; top: 50%; left: 2px; z-index: 1; transform: translateY(calc(-100% - 1px)); color: var(--muted); font-size: 7.5px; font-weight: 750; line-height: 1; letter-spacing: .02em; white-space: nowrap; pointer-events: auto; }
+.graph-phase-l1 { color: #7a4a1e; }
+.graph-phase-l2 { color: #1d2420; }
+.graph-phase-l3 { color: #5c6660; }
+.graph-phase-n { color: #2a62a3; }
+.graph-phase-pe { color: #46741a; }
+/* Conductor start cards (L1-L3, N, PE) in their wire colours; PE gets the green-yellow stripe. */
+.graph-conductor { --graph-accent: var(--conductor); border-left-width: 6px; background: color-mix(in srgb, var(--conductor) 7%, white); }
+.graph-conductor .graph-card-main strong { color: var(--conductor); font-size: 15px; }
+.graph-conductor-l1 { --conductor: #7a4a1e; }
+.graph-conductor-l2 { --conductor: #1d2420; }
+.graph-conductor-l3 { --conductor: #5c6660; }
+.graph-conductor-n { --conductor: #2a62a3; }
+.graph-conductor-pe { --conductor: #46741a; }
+/* PE cards (conductor card and band card): a green-yellow stripe instead of the coloured left border. Only these
+   two: the PE section and the PE rail switch carry the class too. */
+.graph-card.graph-conductor-pe, .graph-band-card.graph-conductor-pe { border-left-color: transparent; }
+.graph-card.graph-conductor-pe::before, .graph-band-card.graph-conductor-pe::before { content: ""; position: absolute; top: -1px; bottom: -1px; left: -6px; width: 6px; background: repeating-linear-gradient(180deg, #6fa21a 0 7px, #e5cb2b 7px 14px); }
+/* Band of the five conductors above the sections; each card jumps to its section. */
+.graph-conductor-band { position: sticky; left: 14px; display: flex; flex-wrap: wrap; gap: 8px; width: min(100%, 1100px); margin: 4px 0 24px 14px; }
+.graph-band-card { --graph-accent: var(--conductor); display: grid; justify-items: start; gap: 1px; min-width: 150px; padding: 8px 12px; border: 1px solid #d3ddd5; border-left: 6px solid var(--conductor); background: color-mix(in srgb, var(--conductor) 7%, white); color: var(--ink); font: inherit; text-align: left; cursor: pointer; position: relative; }
+.graph-band-card:hover { box-shadow: 0 3px 10px rgba(21,55,46,.14); }
+.graph-band-card strong { color: var(--conductor); font-size: 18px; line-height: 1.1; }
+.graph-band-card span { font-size: 11px; }
+.graph-band-card small { color: var(--muted); font-size: 10px; }
+.graph-conductor-group h3 { display: flex; align-items: baseline; gap: 8px; border-bottom: 2px solid var(--conductor); scroll-margin-top: 12px; }
+.graph-conductor-badge { padding: 1px 8px; background: var(--conductor); color: white; font-family: inherit; font-size: 13px; font-weight: 750; }
+.graph-conductor-pe .graph-conductor-badge { background: repeating-linear-gradient(90deg, #5d8f17 0 8px, #b59a14 8px 16px); }
+/* The first wire of a chain comes from its conductor (no vertical bus line). */
+.graph-feed-in::after { display: none; }
+/* Sicherungen view: a Verbraucher card holds its name and its L, N and PE feed side by side. */
+.graph-phase-inline { position: static; transform: none; margin-left: 2px; padding: 1px 4px; border: 1px solid currentColor; font-size: 9px; }
+/* Top card of a Sicherung/FI block lines up with its followers (lanes: see .graph-top). */
+.graph-node-top > .graph-card { margin-top: 3px; }
+.graph-card.graph-load-card { width: 700px; display: grid; grid-template-columns: 190px 1fr; align-items: start; gap: 10px; padding: 6px 9px; }
+.graph-load-card-name { display: grid; gap: 1px; min-width: 0; }
+/* The name opens the Verbraucher (its Klemme, Sicherung or own page). */
+button.graph-load-card-name { align-content: start; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+button.graph-load-card-name:hover strong, button.graph-load-card-name:focus-visible strong { text-decoration: underline; }
+.graph-load-card-name small { color: var(--muted); font-size: 8px; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
+.graph-load-card-name strong { font-size: 11.5px; font-weight: 650; overflow-wrap: anywhere; }
+.graph-load-card-name span { color: var(--muted); font-size: 10px; }
+.graph-load-card-feeds { display: grid; grid-template-columns: 1.4fr 1fr .6fr; gap: 6px; min-width: 0; }
+.graph-load-list { display: grid; gap: 6px; padding-left: 14px; }
+/* Conductor busbars: vertical lines at the left of a rail area, taps run behind the cards to them. */
+.graph-rail-area { position: relative; width: max-content; min-width: 100%; box-sizing: border-box; padding: 24px 24px 0 128px; }
+/* FI box: as high as its text, at least room for its four taps (L1, L2, L3, N) about 15px apart. Its Sicherungen stand below it, moved right past the
+   phase lines and the neutral bar that leave the box at its lower left (FI_LINE_X, FI_BUS_X in app.js). */
+.graph-fi-block > .graph-card { min-height: 76px; border-width: 2px; border-left-width: 4px; }
+.graph-node.graph-fi-block { flex-direction: column; align-items: flex-start; }
+.graph-fi-block > .graph-fi-out { margin: 8px 0 0 38px; }
+/* Sicherung and FI boxes hold little text: narrower than the other cards. */
+/* Sicherung: its widest text ("10 A · FI 2 · N2") plus the fold button; on paper there is no button. */
+.graph-card.graph-fuse { width: 124px; }
+body.graph-printing .graph-card.graph-fuse { width: 94px; }
+.graph-card.graph-fi { width: 168px; }
+.graph-card.graph-fi .graph-card-main span { white-space: normal; }
+/* Behind the FI the phases run as separate lines (SVG, drawGraphRails), not as one shared connector. */
+.graph-fi-out::before, .graph-fi-out > .graph-child::before, .graph-fi-out > .graph-child::after { display: none; }
+.graph-fi-line { stroke-width: 1.5; }
+.graph-bus { stroke-width: 2; }
+.graph-rail-svg { position: absolute; top: 0; left: 0; z-index: 0; overflow: visible; pointer-events: none; }
+.graph-rail-area > .graph-trees, .graph-rail-area > .graph-load-list { position: relative; z-index: 1; }
+/* Top lane layout (Sicherungen view): cards at the top of their followers, wires at --lane below the top. */
+.graph-top { --lane: 28px; }
+.graph-top .graph-node { align-items: flex-start; }
+.graph-top .graph-children::before { top: var(--lane); }
+.graph-top .graph-child::before { top: var(--lane); }
+.graph-top .graph-child:first-child::after { top: var(--lane); }
+.graph-top .graph-child:last-child::after { bottom: auto; height: var(--lane); }
+.graph-top .graph-child:only-child::after { display: none; }
+.graph-top .graph-phase { top: var(--lane); }
+/* Verbraucher block: N and PE Klemmen in their wires below the L lane, all three wires end at the Verbraucher. */
+.graph-load-join { position: relative; display: flex; align-items: stretch; gap: var(--graph-gap); }
+.graph-join-feeds { position: relative; display: grid; align-content: start; gap: 6px; padding-top: 58px; }
+/* The L wire passes above the N/PE Klemmen straight into the Verbraucher. */
+.graph-join-feeds::before { content: ""; position: absolute; top: calc(var(--lane) - 3px); left: 0; right: calc(var(--graph-gap) * -1 - var(--align-extra, 0px) - var(--lane-space, 0px)); border-top: 1.5px solid var(--graph-wire); }
+.graph-join-wire { position: relative; }
+/* `--align-extra`: extra gap behind an aligned Klemmen stack (graphAlignSharedLoads); `--lane-space`: room for the
+   lanes of several N/PE bundles in front of the Verbraucher (drawGraphRails). Every wire into the Verbraucher grows
+   by both; the lanes stay near the Klemmen, the wire labels at the Verbraucher. */
+.graph-join-wire::after { content: ""; position: absolute; top: 50%; left: 100%; width: calc(var(--graph-gap) + var(--align-extra, 0px) + var(--lane-space, 0px)); border-top: 1.5px solid var(--join-color); }
+.graph-join-n { --join-color: #2a62a3; }
+.graph-join-pe { --join-color: #5d8f17; }
+.graph-join-pe::after { top: calc(50% - 1px); height: 2px; border-top: 0; background: repeating-linear-gradient(90deg, #5d8f17 0 6px, #e5cb2b 6px 12px); }
+.graph-card.graph-terminal, .graph-card.graph-join-terminal { width: var(--klemme-width); }
+/* The room heading of a narrow Klemme card is cut with "…" rather than widening it (full room in the tooltip). */
+.graph-terminal .graph-card-main small { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* N/PE Klemmen already drawn above (same Sicherung): an empty, low row; its wire comes from there (drawGraphRails).
+   Only as high as its wire label, so the Klemme of the row (L) and its Verbraucher do not move far down. */
+.graph-join-wire.graph-join-shared { min-height: 14px; }
+/* Its wire is drawn into the Verbraucher in one piece (drawGraphRails): no CSS stub of its own. */
+.graph-join-wire.graph-join-svg::after { display: none; }
+/* A Klemme whose N and PE wires all come from elsewhere (only such empty rows): the rows lie over the top of its card,
+   so PE and N enter the Verbraucher just above the L wire and the Klemme hardly moves down (graphLiftStacks). */
+.graph-klemmen-stack:not(.graph-klemmen-box):not(:has(> .graph-join-wire:not(.graph-join-shared), > .graph-join-missing)) > .graph-join-shared { min-height: 8px; }
+.graph-klemmen-stack:not(.graph-klemmen-box):not(:has(> .graph-join-wire:not(.graph-join-shared), > .graph-join-missing)) > .graph-card + .graph-join-shared { margin-top: 8px; }
+.graph-klemmen-stack:not(.graph-klemmen-box):not(:has(> .graph-join-wire:not(.graph-join-shared), > .graph-join-missing)) > .graph-join-shared:last-child { margin-bottom: -26px; }
+/* Its stub starts at the vertical wire in the gap (drawGraphRails: half a gap behind the row, PE 6px further), not at the row. */
+/* `--join-lane`: the lane of its wire when several blocks of N/PE Klemmen share a column (drawGraphRails). */
+.graph-join-wire.graph-join-shared::after { left: calc(100% + var(--graph-gap) / 2 + var(--align-extra, 0px) + var(--join-lane, 0px)); width: calc(var(--graph-gap) / 2 - var(--join-lane, 0px) + var(--lane-space, 0px)); }
+.graph-klemmen-stack > .graph-join-wire.graph-join-shared::after { width: calc(var(--graph-gap) * 1.5 - var(--join-lane, 0px) + var(--lane-space, 0px)); }
+.graph-join-wire.graph-join-pe.graph-join-shared::after { left: calc(100% + var(--graph-gap) / 2 + 6px + var(--align-extra, 0px) + var(--join-lane, 0px)); width: calc(var(--graph-gap) / 2 - 6px - var(--join-lane, 0px) + var(--lane-space, 0px)); }
+.graph-klemmen-stack > .graph-join-wire.graph-join-pe.graph-join-shared::after { width: calc(var(--graph-gap) * 1.5 - 6px - var(--join-lane, 0px) + var(--lane-space, 0px)); }
+.graph-klemmen-box > .graph-join-shared { border-top: 0 !important; }
+/* PE and N Klemmen of one cable (20 and 20/o) as one box: no gap between the two rows, a dashed line between the
+   Klemmen of one cable; Klemmen of different cables further along keep a small gap (`graph-join-split`). */
+.graph-klemmen-stack:not(.graph-klemmen-box) > .graph-join-pair-bottom { margin-top: -6px; }
+.graph-klemmen-stack:not(.graph-klemmen-box) > .graph-join-pair-top .graph-card:not(.graph-join-split) { border-bottom: 0; box-shadow: none; }
+.graph-klemmen-stack:not(.graph-klemmen-box) > .graph-join-pair-bottom .graph-card:not(.graph-join-split) { border-top: 1px dashed #dfe6e0; box-shadow: 0 2px 4px rgba(21,55,46,.06); }
+.graph-klemmen-stack:not(.graph-klemmen-box) > .graph-join-pair-top .graph-card.graph-join-split { margin-bottom: 3px; }
+.graph-klemmen-stack:not(.graph-klemmen-box) > .graph-join-pair-bottom .graph-card.graph-join-split { margin-top: 3px; }
+body.graph-printing .graph-klemmen-stack:not(.graph-klemmen-box) > .graph-join-pair-bottom .graph-card:not(.graph-join-split) { border-top-color: #a3ada6; }
+/* Same cable, same room: the lower Klemme of the box does not repeat it (as in a Klemmen box). */
+.graph-klemmen-stack:not(.graph-klemmen-box) > .graph-join-pair-bottom .graph-card:not(.graph-join-split) .graph-card-main small { display: none; }
+/* Several Klemmen in one N/PE wire (N → 20/o → 32/1): side by side, joined by the wire. */
+.graph-join-chain { display: flex; gap: 18px; }
+.graph-join-chain > .graph-card { position: relative; flex: 1 1 0; min-width: 0; }
+/* N/PE Klemmen keep name, colour and conductor badge on one line (narrow columns would push the badge down). */
+.graph-join-terminal .graph-card-main strong { flex-wrap: nowrap; gap: 4px; white-space: nowrap; }
+.graph-join-chain > .graph-card:not(:last-child)::after { content: ""; position: absolute; top: 50%; left: 100%; width: 18px; border-top: 1.5px solid var(--join-color); }
+.graph-join-pe .graph-join-chain > .graph-card:not(:last-child)::after { top: calc(50% - 1px); height: 2px; border-top: 0; background: #5d8f17; }
+/* A chain starting in another room than its L Klemme stands right-aligned: its last Klemme in the column of the L
+   Klemme, the ones in front of it reach left into the free space below the card before, so the stack keeps its width.
+   In the same room the first Klemme stays below the L Klemme and the chain widens the stack. */
+.graph-klemmen-stack:not(.graph-klemmen-box) .graph-join-chain-reach {
+  /* Its own width must not widen the stack. */
+  contain: inline-size;
+  width: calc((var(--klemme-width) + 18px) * var(--before) + var(--klemme-width));
+  margin-left: calc((var(--klemme-width) + 18px) * var(--before) * -1);
+}
+.graph-join-missing { width: var(--klemme-width); box-sizing: border-box; padding: 8px 9px; border: 1px dashed #d9a79c; color: #a33a2a; font-size: 11px; font-weight: 650; }
+.graph-load-join > .graph-card.graph-load { align-self: stretch; }
+.graph-load-join > .graph-card.graph-load .graph-card-main { align-content: start; }
+/* L, N and PE Klemme stacked in one column; the Verbraucher stretches over all three wires. */
+.graph-top .graph-node.graph-node-stack { align-items: stretch; }
+.graph-klemmen-stack { position: relative; display: grid; align-content: start; gap: 6px; }
+/* The L wire over the extra gap behind an aligned stack (at the lane height, like the wire into the Verbraucher). */
+.graph-klemmen-stack::after { content: ""; position: absolute; top: var(--lane); left: 100%; width: calc(var(--align-extra, 0px) + var(--lane-space, 0px)); border-top: 1.5px solid var(--graph-wire); }
+/* In the framed box the line is placed from inside its 1px border. */
+.graph-klemmen-box::after { top: calc(var(--lane) - 1px); width: calc(var(--align-extra, 0px) + var(--lane-space, 0px) + 1px); }
+/* Klemmen box: every row fills the box. */
+.graph-klemmen-box > .graph-join-wire > .graph-card, .graph-klemmen-box > .graph-join-missing { width: auto; }
+/* Plain stack (L Klemme with the N/PE Klemmen of another cable): every card keeps the normal width; the stack may
+   be wider (a chain of Klemmen, or aligned with the Verbraucher of the same N/PE Klemmen), so each wire runs on
+   behind the cards to its right edge: L at the lane height, N/PE in the middle of their row. */
+.graph-klemmen-stack:not(.graph-klemmen-box) { position: relative; }
+.graph-klemmen-stack:not(.graph-klemmen-box) .graph-card { z-index: 1; }
+.graph-klemmen-stack:not(.graph-klemmen-box) .graph-card.graph-join-terminal,
+.graph-klemmen-stack:not(.graph-klemmen-box) > .graph-join-missing { width: var(--klemme-width); }
+.graph-klemmen-stack:not(.graph-klemmen-box) .graph-join-chain > .graph-card { flex: none; }
+.graph-klemmen-stack:not(.graph-klemmen-box)::before { content: ""; position: absolute; top: var(--lane); left: 0; right: 0; border-top: 1.5px solid var(--graph-wire); }
+.graph-klemmen-stack:not(.graph-klemmen-box) > .graph-join-wire:not(.graph-join-shared)::before { content: ""; position: absolute; top: 50%; left: 0; right: 0; border-top: 1.5px solid var(--join-color); }
+.graph-klemmen-stack:not(.graph-klemmen-box) > .graph-join-pe:not(.graph-join-shared)::before { top: calc(50% - 1px); height: 2px; border-top: 0; background: repeating-linear-gradient(90deg, #5d8f17 0 6px, #e5cb2b 6px 12px); }
+.graph-klemmen-stack > .graph-join-wire::after { width: calc(var(--graph-gap) * 2 + var(--align-extra, 0px) + var(--lane-space, 0px)); }
+/* Branch row (12/o → 2 below 12/o → 1): the columns of the shared Klemmen stay free; its wire is drawn from its last
+   Klemme on to a further Verbraucher (drawGraphRails), not into the one beside it. */
+.graph-join-ghost { visibility: hidden; }
+.graph-join-wire.graph-join-branch::after { display: none; }
+/* N/PE Klemme in the box of the L Klemme (12/o with 12/u): its wires run on from there (drawGraphRails). */
+.graph-join-wire.graph-join-head::after { display: none; }
+/* Such a box is never aligned; the L wire to its Kanäle comes from its row (its own stub would sit at the wrong height). */
+.graph-klemmen-box:has(> .graph-join-head)::after { display: none; }
+.graph-klemmen-stack:not(.graph-klemmen-box) > .graph-join-wire.graph-join-branch::before { display: none; }
+/* Klemmen box: the stacked Klemmen of one Verbraucher in one frame, one row per Klemme (each row opens its Klemme). */
+.graph-klemmen-box { gap: 0; align-self: start; border: 1px solid #d3ddd5; border-left: 3px solid var(--leaf); background: white; box-shadow: 0 1px 4px rgba(21,55,46,.06); }
+.graph-klemmen-box .graph-card { border: 0; box-shadow: none; }
+.graph-klemmen-box .graph-card:hover { background: #f4f8f5; }
+.graph-klemmen-box > :not(:first-child) { border-top: 1px dashed #dfe6e0; }
+/* Klemmen stack: PE on top, N below, the L Klemme (first in the markup) at the bottom; graphLiftStacks moves the
+   row's devices down so the L wire still runs straight into it. */
+.graph-klemmen-stack > .graph-card:first-child { order: 1; }
+.graph-klemmen-box > .graph-card:first-child { border-top: 1px dashed #dfe6e0; }
+.graph-klemmen-box > .graph-card:first-child + * { border-top: 0; }
+.graph-klemmen-box > .graph-join-wire:not(:first-child) .graph-card-main small { display: none; }
+.graph-klemmen-box > .graph-join-missing { margin: 4px; }
+/* Klemmen box with its Verbraucher behind the Kanäle: N/PE wires are drawn by drawGraphRails below the Kanäle
+   (room for them at the bottom), not by the short CSS stubs. */
+.graph-klemmen-route > .graph-load-group-feeds { padding-bottom: 26px; }
+.graph-klemmen-route .graph-klemmen-box > .graph-join-wire::after, .graph-klemmen-route .graph-klemmen-box > .graph-join-wire > .graph-join-phase { display: none; }
+/* Sharp on the pixel grid like the CSS wires they continue (smoothed lines look thicker). */
+.graph-join-route { stroke-width: 1.5; shape-rendering: crispEdges; }
+.graph-node-stack > .graph-children > .graph-child { flex: 1; display: flex; }
+.graph-node-stack > .graph-children > .graph-child > .graph-node { flex: 1; align-items: stretch; }
+.graph-node-stack > .graph-children > .graph-child > .graph-node > .graph-card { align-self: stretch; }
+.graph-node-stack .graph-load .graph-card-main { align-content: start; }
+/* Shared Verbraucher block: several Sicherung rows (e.g. L1/L2/L3) run into one Verbraucher box at the right. */
+.graph-load-group { display: flex; align-items: stretch; }
+.graph-load-group-feeds { display: flex; flex-direction: column; }
+/* Each row stretches to the right edge, so its wire reaches the shared box whatever the path's length. */
+.graph-load-group-row .graph-children { flex: 1 1 auto; }
+.graph-load-group-row + .graph-load-group-row { margin-top: 6px; }
+.graph-load-tail { position: absolute; top: var(--lane); left: var(--graph-gap); right: 0; border-top: 1.5px solid var(--graph-wire); }
+/* N and PE Klemmen once below the rows, in the column of the L Klemmen, wired into the box. */
+.graph-load-group-join { align-self: flex-end; width: var(--klemme-width); margin: 6px calc(var(--graph-gap) * 2) 0 0; }
+.graph-load-group > .graph-card.graph-load { align-self: stretch; margin: 3px 0; }
+.graph-load-group > .graph-card.graph-load .graph-card-main { align-content: start; }
+.graph-rail { stroke-width: 3; }
+.graph-tap { stroke-width: 1.2; opacity: .7; }
+.graph-tap-feed { stroke-width: 1.4; opacity: .8; }
+/* PE: yellow dashes on the green base line (protective conductor green/yellow). */
+.graph-pe-stripe { stroke-dasharray: 6 6; }
+.graph-rail.graph-pe-stripe { stroke-dasharray: 9 9; }
+.graph-rail-name { font-size: 10px; font-weight: 800; text-anchor: middle; }
+/* Conductor label on a busbar tap, right-aligned in front of the card it leads to (same look as .graph-phase). */
+.graph-wire-label { font-size: 7.5px; font-weight: 750; letter-spacing: .02em; paint-order: stroke; stroke: var(--paper); stroke-width: 2.5px; }
+/* Label on the wire from an N/PE Klemme into its Verbraucher, 2px behind the card like the L labels. */
+.graph-top .graph-join-wire > .graph-join-phase { top: 50%; left: calc(100% + 2px); }
+/* Stacked L/N/PE Klemmen: the L label sits after the first gap (behind the wire stub), N and PE follow it. */
+.graph-top .graph-klemmen-stack > .graph-join-wire > .graph-join-phase { left: calc(100% + var(--graph-gap) + 2px + var(--align-extra, 0px) + var(--lane-space, 0px)); }
+.graph-tap-label { font-size: 9px; font-weight: 750; paint-order: stroke; stroke: var(--paper); stroke-width: 3px; }
+.graph-rail-toggles { display: inline-flex; border: 1px solid #cbd8cd; background: white; }
+.graph-rail-toggles[hidden] { display: none; }
+.graph-rail-toggle { display: inline-flex; align-items: center; gap: 4px; height: 36px; padding: 0 9px; border-right: 1px solid #e1e8e2; color: var(--conductor); font-size: 11px; font-weight: 750; cursor: pointer; }
+.graph-rail-toggle:last-child { border-right: 0; }
+.graph-rail-toggle input { accent-color: var(--conductor); }
+/* Verbraucher at the end of a Klemmenpfad, with its L/N/PE Klemmen as small buttons. */
+.path-node.load-path-node { position: relative; border-left-color: #a2577a; background: #fbf6f8; }
+/* ✕ at the top right of a Verbraucher card (review mode): cuts this Klemme's link to it. */
+.load-disconnect { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border: 1px solid #e4d6dc; border-radius: 6px; background: white; color: #c49a2c; font-size: 14px; line-height: 1; cursor: pointer; }
+.load-disconnect:hover, .load-disconnect:focus-visible { outline: none; border-color: #a2577a; color: #a2577a; }
+/* ✎ beside it: rename or delete the Verbraucher (review mode). */
+.load-disconnect.load-edit { color: var(--leaf); }
+.load-disconnect + .load-disconnect.load-edit { right: 40px; }
+/* The buttons sit on the heading line ("VERBRAUCHER"); the name below keeps the card's full width. */
+.path-node.load-path-node:has(.load-disconnect) > .path-node-type { min-height: 24px; padding-right: 72px; }
+/* Write controls only show in the Überprüfungsmodus (body.review-mode, set by app.js). */
+body:not(.review-mode) .review-only { display: none !important; }
+/* An overview row with a small action beside it (FI page Sicherungen, Orte). */
+.overview-row-action { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; border-bottom: 1px solid var(--line); }
+.overview-row-action > .overview-item { border-bottom: 0; }
+.overview-row-action > .tiny-action { padding: 0 14px; }
+.overview-row-action > .tiny-action.is-danger { color: #9d3c34; }
+.load-path-stack { display: grid; gap: 6px; }
+.load-feeds { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.load-feed { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border: 1px solid #dce5de; background: white; color: var(--ink); font: inherit; font-family: Consolas, monospace; font-size: 10.5px; cursor: pointer; }
+.load-feed:hover { border-color: var(--leaf); }
+.load-feed-missing { border-style: dashed; border-color: #d9a79c; color: #a33a2a; font-family: inherit; font-weight: 650; cursor: default; }
+.load-feed-direct { cursor: default; }
+/* A Klemme feed of one Verbraucher with its own ⇄ (change) and ✕ (cut) in review mode. */
+.load-feed-group { display: inline-flex; align-items: center; gap: 1px; border: 1px solid #dce5de; background: white; }
+.load-feed-group > .load-feed { border: 0; }
+.load-feed-change { padding: 0 3px; border: 0; background: transparent; color: var(--leaf); font: inherit; cursor: pointer; }
+.load-feed-change:hover, .load-feed-cut:hover { background: var(--leaf-pale); }
+.load-feed-cut { margin-left: 2px; padding: 0 2px; border: 0; background: transparent; color: #a33a2a; font: inherit; cursor: pointer; }
+/* A Verbraucher without any PE connection: a quiet note instead of "PE fehlt". */
+.load-feed-none, .graph-feed-none { display: inline-block; padding: 2px 6px; border: 1px dashed #c9d3cb; color: var(--muted); font-size: 10.5px; font-style: italic; }
+/* The Sicherung a Verbraucher hangs on directly: opens its page. */
+.load-feed-link { padding: 0; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.load-feed-link:hover { color: var(--leaf); text-decoration: underline; }
+/* Review mode: a missing feed opens the Klemme dialog. */
+.load-feed-assign { cursor: pointer; }
+.load-feed-assign:hover { border-color: #a33a2a; background: #fbeeea; }
+.graph-load { --graph-accent: #a2577a; }
+.graph-card.graph-load { background: #fbf6f8; }
+.graph-neutral { padding: 1px 5px; border: 1px solid #b9cce4; border-radius: 8px; background: #eef4fb; color: #2a62a3; font-size: 9.5px; font-weight: 750; }
+.graph-phase-key::before { background: linear-gradient(90deg, #7a4a1e 0 20%, #1d2420 20% 40%, #5c6660 40% 60%, #2a62a3 60% 80%, #6fa21a 80%); width: 22px; }
+.graph-group h3 small { margin-left: 6px; color: var(--muted); font-family: inherit; font-size: 11px; letter-spacing: .04em; }
+.graph-flag { display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 10px; border: 1px solid #cbd8cd; background: white; color: var(--pine); font-size: 11px; font-weight: 600; cursor: pointer; }
+.graph-flag input { accent-color: var(--leaf); }
+.graph-levels[hidden] { display: none; }
+/* Prüfliste: collapsible list of what needs a look; each entry opens its Klemme. */
+.graph-review { margin-bottom: 14px; border: 1px solid #e3d3a4; background: #fffaf0; }
+.graph-review summary { padding: 9px 12px; color: #6a5212; font-size: 12px; font-weight: 700; cursor: pointer; }
+.graph-review-count { margin-left: 6px; padding: 1px 7px; border-radius: 9px; background: #f0dfa8; color: #5a4510; font-size: 11px; }
+.graph-review-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 6px; max-height: 340px; overflow: auto; padding: 0 12px 12px; }
+.graph-review-item { display: grid; grid-template-columns: auto auto 1fr; align-items: baseline; gap: 2px 8px; padding: 7px 9px; border: 1px solid #eadfbf; background: white; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.graph-review-item:hover { border-color: #c9a33a; }
+.graph-review-item strong { font-family: Consolas, monospace; font-size: 11px; }
+.graph-review-item small { color: var(--muted); font-size: 10px; }
+.graph-review-kind { color: #8a6412; font-size: 9px; font-weight: 750; letter-spacing: .06em; text-transform: uppercase; }
+.graph-review-mismatch .graph-review-kind, .graph-review-load .graph-review-kind { color: #a33a2a; }
+.graph-review-message { grid-column: 1 / -1; color: #4a514c; font-size: 11px; }
+/* Verbraucher mode: one row per Verbraucher with its L, N and PE feed side by side. */
+.graph-loads { display: grid; min-width: 960px; border-top: 1px solid var(--line); }
+.graph-load-row { display: grid; grid-template-columns: minmax(220px, 1.3fr) minmax(260px, 1.4fr) minmax(170px, 1fr) minmax(110px, .6fr); gap: 10px; align-items: start; padding: 7px 4px; border-bottom: 1px solid var(--line); }
+.graph-load-head { position: sticky; top: 0; z-index: 2; background: var(--paper); color: var(--muted); font-size: 9px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+.graph-load-name { display: grid; gap: 1px; }
+.graph-load-name strong { font-size: 12px; font-weight: 650; }
+.graph-load-name small { color: var(--muted); font-size: 10px; }
+.graph-feed-cell { display: grid; gap: 3px; }
+.graph-feed { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; padding: 3px 6px; border: 1px solid #dce5de; background: white; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.graph-feed:hover { border-color: var(--leaf); }
+.graph-feed .graph-phase { position: static; transform: none; font-size: 10px; }
+.graph-feed strong { font-family: Consolas, monospace; font-size: 11px; }
+.graph-feed small { width: 100%; color: var(--muted); font-size: 10px; }
+/* A Verbraucher connected directly to PE: no Klemme to open. */
+.graph-feed-direct { cursor: default; }
+/* N/PE directly at the conductor (no Klemme): no box, a narrow row the wire runs through from the busbar tap to
+   the Verbraucher. */
+/* The wire itself is one SVG line from the busbar into the Verbraucher (drawGraphRails), so no CSS pieces here. */
+.graph-join-direct { position: relative; display: block; width: var(--klemme-width); height: 22px; }
+.graph-join-wire:has(> .graph-join-direct)::after, .graph-join-wire:has(> .graph-join-direct)::before { display: none; }
+.graph-klemmen-stack > .graph-join-wire > .graph-join-direct { width: auto; }
+.graph-feed-missing { display: inline-block; padding: 3px 6px; border: 1px dashed #d9a79c; color: #a33a2a; font-size: 11px; font-weight: 650; }
+.graph-card { position: relative; width: 196px; flex: none; display: flex; align-items: stretch; border: 1px solid #d3ddd5; border-left: 3px solid var(--graph-accent); background: white; box-shadow: 0 1px 4px rgba(21,55,46,.06); transition: box-shadow .16s, border-color .16s; }
+.graph-card:hover { border-color: var(--graph-accent); box-shadow: 0 3px 10px rgba(21,55,46,.14); }
+.graph-card-main { flex: 1; min-width: 0; display: grid; gap: 1px; padding: 5px 9px; border: 0; background: transparent; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.graph-card-main:disabled { cursor: default; }
+.graph-card-main:focus-visible { outline: 2px solid var(--leaf); outline-offset: -2px; }
+.graph-card-main small { color: var(--muted); font-size: 8px; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
+.graph-card-main strong { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 11.5px; font-weight: 650; overflow-wrap: anywhere; }
+.graph-card-main span { overflow: hidden; color: var(--muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.graph-toggle { flex: none; align-self: center; min-width: 22px; height: 22px; margin-right: 7px; padding: 0 5px; border: 1px solid #c9d4cc; border-radius: 11px; background: #f2f6f2; color: var(--pine); font: inherit; font-size: 11px; font-weight: 650; cursor: pointer; }
+.graph-toggle:hover { border-color: var(--leaf); background: #e2eee6; }
+.graph-card.is-unused .graph-card-main strong { color: #98a19a; }
+/* Target of a Prüfliste jump: pulses briefly so it is found on the large page. */
+.graph-card.is-focus { z-index: 3; border-color: #d9822b; background: #ffe9cf; outline: 3px solid #d9822b; outline-offset: 3px; box-shadow: 0 0 0 9px rgba(217,130,43,.22), 0 6px 18px rgba(217,130,43,.35); animation: graph-focus-pulse 1s ease-in-out 3; }
+@keyframes graph-focus-pulse { 50% { outline-color: rgba(217,130,43,.25); box-shadow: 0 0 0 16px rgba(217,130,43,.08), 0 6px 18px rgba(217,130,43,.35); } }
+.graph-card.is-match { border-color: var(--citrus); background: #fff9e4; box-shadow: 0 0 0 2px rgba(227,189,80,.45); }
+.overview-items { border-top: 1px solid var(--line); }
+.overview-item { width: 100%; min-height: 58px; display: grid; grid-template-columns: minmax(0, 1fr) 110px 14px; align-items: center; gap: 12px; border: 0; border-bottom: 1px solid var(--line); padding: 9px 11px; color: var(--ink); background: rgba(255,255,255,.32); text-align: left; cursor: pointer; }
+.overview-item-fuse { min-height: 64px; grid-template-columns: minmax(0, 1fr) 14px; }
+.overview-fuse-copy { min-width: 0; display: grid; gap: 5px; }
+.overview-fuse-graph { width: 100%; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+.overview-fuse-graph::-webkit-scrollbar { display: none; }
+.overview-fuse-canvas { position: relative; min-width: 560px; display: grid; grid-template-columns: minmax(150px, .55fr) minmax(0, 1fr); grid-auto-rows: minmax(64px, auto); align-items: center; column-gap: 48px; row-gap: 0; padding: 7px 4px; }
+.overview-fuse-wires { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.overview-fuse-wire-path { fill: none; stroke: #9ab6a1; stroke-width: 1.5; stroke-linecap: round; }
+.overview-fuse-sources { display: contents; }
+.overview-fuse-sources .overview-item-fuse { z-index: 1; grid-column: 2; grid-template-columns: minmax(0, 1fr); border: 1px solid #d5dfd6; background: rgba(255, 255, 255, .72); }
+.overview-fuse-sources .overview-item-fuse + .overview-item-fuse { border-top: 0; }
+.overview-fuse-target { z-index: 1; min-width: 0; grid-column: 1; align-self: center; display: grid; gap: 4px; border: 1px solid #d5dfd6; padding: 12px; background: #e8f0e9; }
+.overview-fuse-target-button { width: 100%; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.overview-fuse-target-button:hover, .overview-fuse-target-button:focus-visible { outline: 0; border-color: var(--leaf); background: #dfeade; }
+.overview-fuse-target > span { color: #76867b; font-size: 8px; font-weight: 750; letter-spacing: .08em; }
+.overview-fuse-target > strong { color: var(--pine); font-family: Consolas, monospace; font-size: 12px; }
+.overview-fuse-target > small { color: #748078; font-size: 9px; line-height: 1.35; overflow-wrap: anywhere; }
+.overview-fuse-heading { min-width: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
+.overview-fuse-heading > strong { color: var(--pine); font-family: Consolas, monospace; font-size: 12px; font-weight: 700; }
+.overview-fuse-phases { color: #718076; font-size: 9px; font-weight: 600; }
+.overview-fuse-rating { border: 1px solid #d8ded9; border-radius: 10px; padding: 2px 7px; color: #626d65; background: #eef0ee; font-size: 9px; font-weight: 700; line-height: 1.2; }
+.overview-fuse-rating.is-10a { border-color: #f0c98f; color: #a85a12; background: #fff0d8; }
+.overview-fuse-rating.is-16a { border-color: #d9ddda; color: #59625c; background: #ecefed; }
+.overview-fuse-copy > small { overflow: hidden; color: #79857c; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.overview-terminal-group { border-bottom: 1px solid var(--line); background: rgba(255,255,255,.22); }
+.overview-terminal-group-head { min-height: 38px; display: flex; flex-wrap: wrap; align-items: center; gap: 5px 9px; padding: 6px 11px; }
+.overview-terminal-group-identity { min-width: 0; display: grid; gap: 2px; }
+.overview-terminal-group-identity > strong { color: var(--pine); font-family: Consolas, monospace; font-size: 10px; font-weight: 700; }
+.overview-terminal-klemme-line, .overview-terminal-elements { display: flex; align-items: center; gap: 5px; }
+.overview-terminal-klemme-line { flex-wrap: wrap; }
+.overview-terminal-klemme-line > strong { flex: 0 0 auto; color: var(--pine); font-family: Consolas, monospace; font-size: 10px; font-weight: 700; }
+.overview-terminal-elements { flex-wrap: wrap; gap: 0; }
+.overview-terminal-entry { display: inline-flex; align-items: center; gap: 0; }
+.review-control.overview-terminal-review { flex-direction: row; align-items: center; gap: 4px; }
+.overview-terminal-review .review-checkbox { gap: 4px; font-size: 9px; }
+.overview-terminal-review .review-checkbox input { width: 14px; height: 14px; }
+.overview-terminal-review .review-timestamp { max-width: 110px; overflow: hidden; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.overview-terminal-element { display: inline-flex; align-items: center; gap: 4px; min-height: 23px; border: 1px solid transparent; padding: 2px 0; color: var(--pine); background: transparent; font-family: Consolas, monospace; font-size: 9px; cursor: pointer; }
+.terminal-wire-position { display: inline-flex; align-items: center; gap: 3px; border: 1px solid #d5dfd6; padding: 2px 3px; background: transparent; white-space: nowrap; }
+.terminal-wire-position .wire-chip { flex: 0 0 auto; border: 0; padding: 0; background: transparent; }
+.terminal-position-label { font: inherit; }
+.overview-terminal-element .wire-chip { border: 0; padding: 0; background: transparent; }
+.overview-terminal-element:hover .terminal-wire-position { border-color: var(--leaf); }
+.overview-terminal-element:focus-visible { outline: 2px solid var(--leaf); outline-offset: 2px; }
+.overview-terminal-group-head > .overview-item-fuse-inline { width: 110px; min-width: 110px; flex: 0 0 110px; margin-left: auto; }
+.overview-terminal-group-head > .overview-item-fuse-button { padding-right: 0; padding-left: 0; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.overview-item-fuse-button { border: 0; padding: 6px 10px; color: inherit; background: transparent; font-family: inherit; text-align: right; cursor: pointer; }
+.overview-item-fuse-button:hover, .overview-item-fuse-button:focus-visible { outline: 0; background: #e7efe8; }
+.overview-item:hover, .overview-item:focus-visible { outline: 0; background: #e7efe8; }
+.overview-item-copy { min-width: 0; display: grid; gap: 4px; }
+.overview-item-fuse-inline { flex: 0 0 auto; }
+.overview-terminal-location { color: #7d8e82; font-size: 8px !important; }
+.overview-device-label { min-width: 0; display: inline-flex; align-items: center; gap: 5px; flex: 0 0 auto; overflow: hidden; padding: 3px 6px; border: 1px solid #d5dfd6; color: var(--pine); background: #f7f9f6; font: inherit; white-space: nowrap; cursor: pointer; }
+.overview-device-label:hover, .overview-device-label:focus-visible { outline: 0; border-color: var(--leaf); background: #e7efe8; }
+.overview-terminal-klemme-line > .overview-device-label { min-height: 23px; }
+.overview-device-label small { color: #7d8e82; font-size: 7px; font-weight: 750; letter-spacing: .06em; }
+.overview-device-label strong { overflow: hidden; font-family: Consolas, monospace; font-size: 9px; font-weight: 600; text-overflow: ellipsis; }
+.overview-device-label > span { color: var(--leaf); font-size: 8px; font-weight: 700; }
+.overview-element-description { min-width: 0; flex: 1 1 180px; color: #79857c; font-size: 9px; overflow-wrap: anywhere; }
+.overview-item-copy strong { overflow: hidden; color: var(--pine); font-family: Consolas, monospace; font-size: 11px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.overview-item-copy small { overflow: hidden; color: #79857c; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.overview-item-type { color: #7d8e82; font-size: 8px; font-weight: 750; letter-spacing: .08em; text-align: right; }
+.overview-item-fuse-inline { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.overview-fuse-icon { width: 18px; height: 12px; flex: 0 0 auto; transform: rotate(90deg); fill: none; stroke: #718076; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.overview-item-fuse-inline strong { color: var(--pine); font-size: 10px; font-weight: 650; }
+.overview-item-arrow { color: var(--leaf); font-size: 18px; text-align: right; }
+.overview-empty { padding: 22px 12px; border-bottom: 1px solid var(--line); color: #79857c; font-size: 11px; }
+/* Home Assistant entities: grouped by mapping; the place line may wrap, a row without target is not clickable */
+.ha-group + .ha-group { margin-top: 18px; }
+.ha-group-heading { display: grid; gap: 3px; padding: 10px 11px 8px; border-bottom: 1px solid var(--line); }
+.ha-group-heading h3 { margin: 0; color: var(--pine); font-size: 13px; }
+.ha-group-heading h3 span { color: #7d8e82; font-weight: 600; }
+.ha-group-heading small { color: #79857c; font-size: 10px; }
+.ha-entity .overview-item-copy small:last-child { white-space: normal; }
+div.ha-entity { grid-template-columns: minmax(0, 1fr) 110px; cursor: default; }
+.ha-entity .overview-item-type { font-size: 10px; letter-spacing: 0; }
+.detail-view { max-width: 1080px; margin: 0 auto; padding: 52px 5.5% 70px; }
+.detail-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; padding-bottom: 30px; border-bottom: 1px solid var(--line); }
+.detail-heading-fuse > div:first-child { min-width: 0; flex: 1 1 auto; }
+.detail-heading .section-tag { color: var(--leaf); }
+.detail-title-row { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.detail-title-row > div { flex: 0 0 auto; }
+.detail-heading-fuse .detail-title-row { width: 100%; }
+.detail-heading-fuse .detail-title-row > #detail-title-action { min-width: 0; flex: 1 1 auto; }
+.detail-fuse-actions, .detail-fuse-labels { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.detail-fuse-actions { width: 100%; gap: 12px; }
+.detail-fuse-actions > .button { margin-left: auto; }
+.detail-heading h2 { margin: 9px 0 7px; color: var(--pine-deep); font-family: Georgia, serif; font-size: 42px; font-weight: 400; line-height: 1.08; overflow-wrap: anywhere; }
+.detail-heading h2.has-parent-link { display: flex; align-items: center; justify-content: flex-start; flex-wrap: wrap; gap: 10px; font-size: 34px; }
+/* Verbraucher page: its name is a whole sentence, so a smaller heading. */
+.detail-heading-load h2 { font-size: 28px; line-height: 1.15; overflow-wrap: break-word; }
+/* The name of a Verbraucher card opens its page. */
+.load-path-name { display: block; width: fit-content; max-width: 100%; border: 0; padding: 0; color: inherit; background: none; font: inherit; text-align: left; cursor: pointer; }
+.load-path-name:hover strong, .load-path-name:focus-visible strong { text-decoration: underline; }
+.detail-parent-link { min-width: 180px; display: inline-grid; grid-template-columns: auto 14px; grid-template-rows: auto auto; align-items: center; justify-items: start; column-gap: 10px; border: 1px solid #d5dfd6; padding: 12px 14px; color: var(--pine); background: #f7f9f6; font-family: var(--font); line-height: 1; text-align: left; vertical-align: baseline; cursor: pointer; }
+.detail-parent-link:hover, .detail-parent-link:focus-visible { outline: 0; border-color: var(--leaf); background: #e7efe8; }
+.detail-parent-link small { grid-column: 1; grid-row: 1; color: #7d8e82; font-size: 8px; font-weight: 750; letter-spacing: .09em; }
+.detail-parent-link strong { grid-column: 1; grid-row: 2; font-family: Consolas, monospace; font-size: 13px; font-weight: 600; }
+.detail-parent-link span { grid-column: 2; grid-row: 1 / span 2; color: var(--leaf); font-size: 16px; }
+.detail-title-separator { color: #a0aaa1; font-family: var(--font); font-size: 16px; }
+.detail-subtitle { margin: 0; color: #748078; font-size: 12px; line-height: 1.6; }
+.detail-review { margin-top: 14px; }
+.review-control { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.review-checkbox { display: inline-flex; align-items: center; gap: 8px; color: var(--pine); font-size: 12px; font-weight: 700; cursor: pointer; }
+.review-checkbox input { width: 18px; height: 18px; margin: 0; accent-color: var(--leaf); }
+.review-timestamp { color: #748078; font-size: 10px; line-height: 1.4; }
+.channel-review-control { margin-left: auto; flex-direction: row; align-items: center; gap: 9px; }
+.channel-review-control .review-timestamp { white-space: nowrap; }
+.address-badge { padding: 7px 9px; border: 1px solid #d5dfd6; color: #708076; font-size: 8px; font-weight: 750; letter-spacing: .09em; white-space: nowrap; }
+.address-badge.terminal-header-badges { display: flex; align-items: stretch; justify-content: flex-end; flex-wrap: wrap; gap: 6px; border: 0; padding: 0; letter-spacing: 0; }
+.terminal-used-header { display: inline-flex; align-items: center; align-self: flex-start; gap: 6px; min-height: 32px; border: 1px solid #cddbcf; padding: 0 9px; color: var(--pine); background: #fff; font-size: 10px; font-weight: 650; white-space: nowrap; }
+.terminal-header-badges [data-edit-terminal] { align-self: flex-start; }
+.fuse-header-badge { min-width: 92px; display: grid; align-content: center; gap: 3px; border: 1px solid #cddbcf; padding: 6px 9px; color: var(--pine); background: #e9f0e9; text-align: left; cursor: pointer; }
+.fuse-header-badge span { color: #76867b; font-size: 7px; font-weight: 750; letter-spacing: .09em; }
+.fuse-header-badge strong { font-size: 10px; font-weight: 650; }
+.fuse-header-badge small { color: #748078; font-size: 8px; }
+.fuse-header-badge.is-unassigned { cursor: default; background: #f4f5f1; }
+.detail-content { padding-top: 29px; }
+.detail-section { margin-bottom: 34px; }
+.section-heading { display: flex; justify-content: space-between; align-items: end; gap: 15px; margin-bottom: 13px; }
+.section-heading .detail-actions { display: flex; align-items: center; gap: 7px; }
+.section-heading .section-tag { color: var(--leaf); }
+/* Conductor select of a Klemme without Sicherung (N, Nx of an FI, PE). */
+.conductor-control { display: inline-flex; align-items: center; gap: 8px; color: #68766d; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.conductor-control select { height: 32px; border: 1px solid #ccd7ce; padding: 0 8px; color: var(--ink); background: white; font: inherit; font-size: 12px; font-weight: 600; letter-spacing: 0; text-transform: none; }
+.section-heading h3 { margin: 4px 0 0; color: var(--pine); font-size: 18px; font-weight: 600; }
+.button-small { min-height: 30px; padding: 0 10px; font-size: 10px; }
+.channel-row { margin-bottom: 10px; border: 1px solid var(--line); background: rgba(255,255,255,.72); }
+.channel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 55px; padding: 7px 13px; border-bottom: 1px solid #e7ebe6; }
+.channel-title { display: flex; align-items: center; gap: 12px; min-width: 0; border: 0; padding: 3px 0; text-align: left; background: none; cursor: pointer; }
+.channel-title:hover strong { color: var(--leaf); }
+.channel-number { width: 30px; height: 30px; display: grid; place-items: center; flex: 0 0 auto; color: var(--pine); background: var(--leaf-pale); font-family: Consolas, monospace; font-size: 11px; }
+.channel-title span:last-child { display: grid; gap: 3px; min-width: 0; }
+.channel-title strong { overflow: hidden; color: var(--ink); font-size: 12px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.channel-title small { color: var(--muted); font-size: 10px; }
+.tiny-action { flex: 0 0 auto; border: 0; color: var(--leaf); background: transparent; font-size: 10px; font-weight: 700; cursor: pointer; }
+.channel-tree { position: relative; display: grid; gap: 13px; padding: 13px 13px 14px 29px; }
+.channel-tree::before { position: absolute; top: 25px; bottom: 28px; left: 17px; border-left: 1px solid #cbd8cd; content: ""; }
+.channel-tree-branch { position: relative; min-width: 0; padding-left: 11px; }
+.channel-tree-branch::before { position: absolute; top: 10px; left: -11px; width: 17px; border-top: 1px solid #cbd8cd; content: ""; }
+.column-label { display: block; margin-bottom: 7px; color: #859188; font-size: 8px; font-weight: 750; letter-spacing: .1em; }
+.link-list { display: grid; gap: 4px; }
+.ets-object-toggle { width: 100%; min-height: 24px; display: flex; align-items: center; justify-content: flex-start; gap: 6px; border: 0; padding: 0 2px 0 0; background: transparent; text-align: left; cursor: pointer; }
+.ets-object-toggle .column-label { margin-bottom: 0; }
+.ets-object-toggle:hover .column-label { color: var(--leaf); }
+.ets-object-toggle-mark { color: var(--leaf); font-size: 14px; line-height: 1; }
+.ets-object-list { display: grid; gap: 6px; }
+.ets-object-list[hidden] { display: none; }
+.ets-object-entry { display: grid; grid-template-columns: minmax(190px, 260px) minmax(0, 1fr); align-items: start; gap: 7px; }
+.ets-object-entry > .link-list { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+.relation-link { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 7px; min-height: 31px; padding: 5px 8px; border: 1px solid #e2e8e2; color: var(--pine); text-align: left; background: #fafbf8; font-family: Consolas, monospace; font-size: 10px; cursor: pointer; }
+.relation-link:hover { border-color: #adc5b4; background: #f0f6f0; }
+.relation-link.group-set-link { border-color: var(--citrus); color: var(--pine-deep); background: #fff8df; box-shadow: inset 3px 0 0 var(--citrus); font-weight: 700; }
+.relation-link.group-set-link:hover { border-color: #d0a937; background: #fff2c8; }
+.relation-link small { margin-left: auto; overflow: hidden; color: #75827a; font-family: var(--font); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.relation-link b { color: var(--leaf); font-family: var(--font); font-size: 17px; font-weight: 400; }
+.wire-chip { display: inline-flex; align-items: center; gap: 5px; width: max-content; max-width: 100%; padding: 4px 6px; border: 1px solid #e0e5df; color: #506056; background: #fff; font-family: Consolas, monospace; font-size: 9px; white-space: nowrap; }
+.wire-chip-none { color: #99a39c; font-family: var(--font); font-style: italic; }
+.wire-swatch { width: 13px; height: 13px; flex: 0 0 auto; border: 1px solid rgba(24,38,30,.42); border-radius: 50%; }
+/* Green-yellow as a scalable drawing: yellow circle, green stripe through its centre that ends at the circle,
+   so the pattern sits the same at every size. No gradient: Chrome prints a gradient in a circle as a pattern
+   with a transparency mask, and some printer drivers (Canon inkjet) ignore the mask and print a large square. */
+.wire-swatch-grge { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='10' fill='%23e7d626'/%3E%3Cpath d='M18.481 4.701 4.701 18.481A10 10 0 0 1 1.519 15.299L15.299 1.519A10 10 0 0 1 18.481 4.701Z' fill='%23278348'/%3E%3C/svg%3E") center / 100% 100% no-repeat; }
+.wire-swatch-br { background: #875437; }.wire-swatch-bk { background: #252a29; }.wire-swatch-bl { background: #3278bd; }
+.wire-swatch-gr { background: #929997; }.wire-swatch-wh { background: #fff; }.wire-swatch-rd { background: #cf3b35; }
+.wire-swatch-gn { background: #25804a; }.wire-swatch-ye { background: #e5cb2b; }.wire-swatch-og { background: #e88730; }.wire-swatch-vi { background: #754c9d; }
+.wire-color-options { display: flex; flex-wrap: wrap; gap: 6px; }
+.wire-color-option { min-width: 51px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 5px 6px; border: 1px solid #d4ddd5; color: #617067; background: white; font-family: Consolas, monospace; font-size: 9px; cursor: pointer; }
+.wire-color-option.selected { border-color: var(--leaf); color: var(--pine); background: var(--leaf-pale); box-shadow: inset 0 0 0 1px var(--leaf); }
+.wire-color-option:focus-visible { outline: 2px solid var(--citrus); outline-offset: 2px; }
+.remove-assignment { width: 27px; height: 27px; border: 0; color: #9a6858; background: transparent; font-size: 18px; cursor: pointer; }
+.muted-inline { color: #a0aaa3; font-size: 10px; font-style: italic; }
+.source-note { display: flex; align-items: center; gap: 8px; padding-top: 14px; border-top: 1px solid var(--line); color: #87928a; font-size: 10px; }
+.source-mark { width: 6px; height: 6px; background: var(--citrus); }
+.linked-channel { padding: 16px 0; border-bottom: 1px solid var(--line); }
+.path-strip { display: flex; align-items: stretch; gap: 9px; margin: 7px 0; overflow-x: auto; }
+.path-node { min-width: 126px; display: grid; align-content: center; gap: 4px; padding: 9px 12px; border-left: 2px solid var(--leaf); background: #e9f0e9; }
+.path-node-button { position: relative; min-width: 280px; flex: 1 1 0; border: 0; border-left: 2px solid var(--leaf); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.path-node-button:hover, .path-node-button:focus-visible { outline: 0; background: #dfeade; }
+.path-node-button:focus-visible { box-shadow: inset 0 0 0 2px var(--leaf); }
+.path-node-button strong, .path-node-button small { padding-right: 17px; }
+.path-node-button > b { position: absolute; right: 11px; bottom: 9px; color: var(--leaf); font-size: 15px; }
+.path-node.group-set-node { border-left: 4px solid var(--citrus); background: #fff8df; }
+.path-node-type { color: #76867b; font-size: 8px; font-weight: 750; letter-spacing: .08em; }
+.path-node strong { color: var(--pine); font-family: Consolas, monospace; font-size: 11px; font-weight: 650; }
+.path-node small { max-width: 200px; overflow: hidden; color: #748078; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.path-node.fuse-channel-path small { max-width: none; overflow: visible; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; }
+.path-edge { align-self: center; color: #a5b1a8; font-size: 16px; }
+.path-stack { display: grid; gap: 5px; }
+/* Followers of one node stand side by side, each column with its own vertical line. */
+/* Each column wide enough for a Verbraucher with its N/PE chips (⇄ ✕); many columns scroll sideways. */
+.path-branches { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(200px, 260px); gap: 10px; align-items: start; max-width: 100%; overflow-x: auto; }
+.path-branch { min-width: 0; display: grid; gap: 5px; }
+/* A column is narrower than a node's usual minimum width, so its nodes shrink to the column. */
+.path-branch .terminal-channel-connection { max-width: none; min-width: 0; }
+.path-branch .path-node, .path-branch .path-node-button { min-width: 0; }
+.path-branch .path-node-button { overflow-wrap: anywhere; }
+.fuse-path-stack { min-width: 0; display: grid; justify-items: stretch; gap: 3px; }
+.fuse-path-stack > .path-node-button { min-width: 0; flex: none; }
+.fuse-path-edge { color: #a5b1a8; font-size: 12px; line-height: 1; text-align: center; }
+.terminal-channel-connection { max-width: 560px; display: flex; align-items: center; gap: 8px; }
+.terminal-channel-connection .path-strip { min-width: 0; flex: 1 1 auto; }
+.channel-connection-remove { flex: 0 0 auto; white-space: nowrap; }
+.fuse-node-graph { width: 100%; overflow-x: auto; padding: 5px 2px 10px; scrollbar-width: none; -ms-overflow-style: none; }
+.fuse-node-graph::-webkit-scrollbar { display: none; }
+.fuse-graph-canvas { position: relative; min-width: 560px; display: grid; grid-template-columns: minmax(185px, .85fr) minmax(260px, 1.15fr); grid-auto-rows: minmax(70px, auto); align-items: center; column-gap: 56px; row-gap: 8px; }
+.fuse-graph-wires { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.fuse-graph-wire { fill: none; stroke: #9ab6a1; stroke-width: 1.5; stroke-linecap: round; }
+.fuse-graph-sources, .fuse-graph-targets { display: contents; }
+.channel-fuse-graph { padding: 2px 0 4px; }
+.channel-fuse-graph .fuse-graph-canvas { min-width: 440px; grid-template-columns: minmax(180px, 1fr) minmax(135px, .78fr); grid-auto-rows: minmax(44px, auto); column-gap: 34px; row-gap: 5px; }
+.channel-graph-source-heading { min-width: 0; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.channel-graph-source-heading .wire-chip { border: 0; padding: 0; background: transparent; }
+.channel-graph-source-heading > .channel-graph-terminal-members { display: flex; align-items: center; gap: 4px; }
+.channel-graph-source-title { color: var(--pine); font-family: Consolas, monospace; font-size: 10px; }
+.channel-graph-terminal-members { display: grid; gap: 2px; }
+.channel-graph-terminal-member { min-width: 0; display: flex; align-items: center; gap: 3px; }
+.channel-graph-terminal-link { min-width: 0; display: flex; align-items: center; gap: 2px; flex: 1 1 auto; border: 0; padding: 0; color: inherit; background: transparent; font: inherit; text-align: left; cursor: pointer; }
+.channel-graph-terminal-link strong { overflow: hidden; color: var(--pine); font-family: Consolas, monospace; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.channel-graph-terminal-link strong.terminal-unused,
+.terminal-number-line > strong.terminal-unused,
+.picker-option > strong.terminal-unused { color: #98a19a; }
+.relation-link.terminal-unused > span:first-child { color: #98a19a; }
+.channel-graph-terminal-link .wire-chip { border: 0; padding: 0; background: transparent; }
+.channel-graph-source small { max-width: none; overflow: visible; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; }
+.channel-graph-source .remove-assignment { width: 20px; height: 20px; flex: 0 0 auto; font-size: 15px; }
+.channel-graph-fuse { min-width: 0; padding-right: 26px; }
+.channel-graph-fuse-stack { grid-column: 2; align-self: center; min-width: 0; display: grid; justify-items: stretch; gap: 2px; position: relative; z-index: 1; }
+.channel-graph-fuse-stack > .path-node-button { min-width: 0; flex: none; }
+.channel-graph-fuse-title { display: flex; align-items: center; gap: 6px; }
+.channel-graph-fuse-title strong { color: var(--pine); font-family: Consolas, monospace; font-size: 10px; font-weight: 700; }
+.channel-graph-fuse small { max-width: none; }
+.channel-graph-unassigned { grid-column: 2; align-self: center; min-height: 44px; padding: 7px 9px; }
+.path-stack > .relation-link { max-width: 480px; }
+.terminal-path-node { width: 100%; max-width: 480px; }
+.terminal-number-line { display: flex; align-items: center; gap: 7px; }
+.terminal-path-link { border: 0; border-left: 2px solid var(--leaf); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.terminal-path-link:hover { background: #dfeade; }
+.vertical-edge { margin: 0 0 0 22px; color: var(--citrus); }
+/* Between two stations outside review mode: a little space instead of an arrow; every station of a path then
+   stands 10px from the next (as FI and Sicherung inside their box: 3 + 4 + 3). */
+.path-gap { display: block; height: 4px; }
+body:not(.review-mode) .path-stack { gap: 10px; }
+body:not(.review-mode) .path-stack > .path-gap { display: none; }
+body:not(.review-mode) .path-stack > .path-strip, body:not(.review-mode) .path-stack > .terminal-channel-connection > .path-strip { margin: 0; }
+/* Swappable edge: the arrow between two path nodes is a button when their order can change */
+.swap-edge { display: block; width: max-content; padding: 0 8px; border: 1px solid var(--line); background: var(--paper); font: inherit; cursor: pointer; }
+.swap-edge:hover { background: var(--leaf-pale); }
+.edge-actions { display: flex; gap: 4px; margin: 0 0 0 22px; }
+.edge-actions .vertical-edge { margin: 0; }
+.drop-edge { display: block; padding: 0 8px; border: 1px solid var(--line); background: var(--paper); font: inherit; cursor: pointer; }
+.drop-edge:hover { background: var(--leaf-pale); color: #b3261e; }
+.add-edge { padding: 0 8px; border: 1px solid var(--line); background: var(--paper); font: inherit; cursor: pointer; }
+.add-edge:hover { background: var(--leaf-pale); color: var(--leaf); }
+/* ⊕ puts a Klemme into the wire */
+.insert-edge { border: 1px solid var(--line); background: var(--paper); font: inherit; cursor: pointer; }
+.insert-edge:hover { background: var(--leaf-pale); color: var(--leaf); }
+/* One box size for the swap, drop, insert and add buttons (their glyphs come from different fonts) */
+.swap-edge, .drop-edge, .add-edge, .insert-edge { box-sizing: border-box; width: 34px; height: 26px; padding: 0; line-height: 1; text-align: center; }
+/* Sicherungsgraph: columns by depth, wires from each node to its children, swap buttons on the wires */
+.tree-graph { width: 100%; overflow-x: auto; padding: 5px 2px 10px; }
+.tree-graph-canvas { position: relative; width: 100%; display: grid; grid-template-columns: repeat(var(--columns), minmax(170px, 1fr)); min-width: calc(var(--columns) * 170px + (var(--columns) - 1) * 44px); grid-auto-rows: minmax(52px, auto); align-items: center; column-gap: 44px; row-gap: 8px; }
+.tree-graph-wires { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.tree-graph-wire { fill: none; stroke: #9ab6a1; stroke-width: 1.5; stroke-linecap: round; }
+.tree-graph-node { position: relative; z-index: 1; min-width: 0; align-self: center; }
+.tree-graph-node > .path-node, .tree-graph-node > .fuse-path-stack > .path-node { width: 100%; min-width: 0; box-sizing: border-box; }
+.tree-graph-node .path-node small { max-width: none; overflow: visible; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; }
+.tree-graph-actions { position: absolute; z-index: 2; transform: translate(-50%, -50%); display: flex; gap: 3px; }
+.tree-graph-swap { padding: 0 6px; border: 1px solid var(--line); border-radius: 10px; color: var(--citrus); background: var(--paper); font: inherit; line-height: 1.3; cursor: pointer; }
+.tree-graph-swap:hover { background: var(--leaf-pale); }
+.tree-graph-drop:hover { color: #b3261e; }
+.remove-text { border: 0; padding: 3px 0; color: #9a6858; background: none; font-size: 10px; cursor: pointer; }
+.no-data { padding: 17px; border: 1px dashed #d3ddd4; color: #87928a; font-size: 11px; }
+.no-data.compact { padding: 10px; }
+.dialog { width: min(560px, calc(100% - 28px)); max-height: min(86vh, 800px); padding: 24px; border: 1px solid #d2ddd4; background: #f7f8f4; color: var(--ink); box-shadow: 0 22px 80px rgba(13,35,26,.24); }
+.dialog::backdrop { background: rgba(11,30,23,.55); backdrop-filter: blur(2px); }
+.dialog-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 22px; }
+.dialog-head .section-tag { color: var(--leaf); }
+.dialog-head h2 { margin: 5px 0 0; color: var(--pine); font-family: Georgia, serif; font-size: 29px; font-weight: 400; }
+.icon-close { width: 30px; height: 30px; border: 1px solid var(--line); color: #758178; background: transparent; font-size: 19px; cursor: pointer; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-grid label { display: grid; gap: 6px; color: #68766d; font-size: 10px; font-weight: 700; }
+/* "Kein PE-Anschluss" of a Verbraucher: a plain checkbox with its text, not the field style. */
+.form-grid .load-no-pe-field { display: flex; align-items: center; gap: 8px; color: var(--pine); font-size: 11px; font-weight: 600; }
+.form-grid .load-no-pe-field input[type="checkbox"] { width: auto; height: auto; margin: 0; padding: 0; accent-color: var(--leaf); }
+.form-grid .terminal-used-field { display: flex; align-items: center; align-self: end; gap: 7px; height: 38px; min-height: 38px; padding: 0 2px 1px; color: var(--pine); font-size: 10px; line-height: 1.2; }
+#assignment-form .form-grid .terminal-used-field input[type="checkbox"] { display: grid; width: 14px; height: 14px; flex: 0 0 14px; place-content: center; appearance: none; margin: 0; border: 1px solid #9aaba0; border-radius: 3px; padding: 0; background: #fff; }
+#assignment-form .form-grid .terminal-used-field input[type="checkbox"]:checked::before { content: "✓"; color: var(--leaf); font-size: 11px; font-weight: 800; line-height: 1; }
+.form-grid input:not([type="hidden"]), .form-grid select { width: 100%; height: 38px; border: 1px solid #ccd7ce; padding: 0 10px; outline: none; color: var(--ink); background: white; font-size: 12px; }
+.form-grid input:focus, .form-grid select:focus { border-color: var(--leaf); box-shadow: 0 0 0 2px rgba(68,124,98,.12); }
+.form-grid input::placeholder { color: #a2ada5; }
+.autocomplete-field, .picker-field { position: relative; }
+.autocomplete-field.is-open, .picker-field:has(.picker-options:not([hidden])) { z-index: 30; }
+.autocomplete-popup, .picker-options { position: absolute; z-index: 40; top: calc(100% + 4px); right: 0; left: 0; display: grid; max-height: min(240px, 34vh); gap: 3px; overflow: auto; border: 1px solid #d2ddd4; border-radius: 10px; padding: 5px; background: #fff; box-shadow: 0 14px 32px rgba(15,42,30,.18); }
+.autocomplete-popup[hidden], .picker-options[hidden] { display: none; }
+.autocomplete-popup.opens-up, .picker-options.opens-up { top: auto; bottom: calc(100% + 4px); }
+.autocomplete-option { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid transparent; border-radius: 6px; padding: 9px 10px; color: var(--ink); background: white; text-align: left; cursor: pointer; }
+.autocomplete-option:hover, .autocomplete-option:focus-visible { outline: none; border-color: #d7e4d9; background: #edf4ee; }
+.autocomplete-option strong { overflow: hidden; font-family: var(--font); font-size: 12px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.autocomplete-option small { flex: 0 0 auto; color: #758178; font-size: 10px; }
+.existing-fi-edit-controls { display: grid; justify-items: start; gap: 6px; }
+.existing-fi-warning { margin: 0; color: #8b5a22; font-size: 10px; line-height: 1.45; }
+.color-field { align-content: start; }
+.form-wide { grid-column: 1 / -1; }
+.phase-fieldset { display: grid; gap: 9px; margin: 0; border: 1px solid #ccd7ce; padding: 10px 12px 12px; }
+.phase-fieldset legend { padding: 0 5px; color: #68766d; font-size: 10px; font-weight: 700; }
+.phase-options { display: flex; flex-wrap: wrap; gap: 9px; }
+.phase-options label { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); font-size: 12px; font-weight: 600; }
+.phase-options input { accent-color: var(--leaf); }
+/* Klemme picker of the path-add dialog: matching Klemmen, wire colour chips, channel and Verbraucher hits. */
+.picker-color-label { min-width: 0; }
+.picker-wire-options { display: flex; flex-wrap: wrap; gap: 3px; }
+.picker-wire-options .wire-color-option { min-width: 25px; height: 27px; flex-direction: column; gap: 1px; padding: 2px; font-size: 7px; }
+.picker-wire-options .wire-swatch { width: 10px; height: 10px; }
+.picker-wire-options .wire-swatch-none { border: 1px dashed #9aa59c; background: white; }
+.picker-option { display: flex; min-width: 0; align-items: center; gap: 8px; border: 1px solid transparent; border-radius: 6px; padding: 8px; color: var(--ink); background: white; text-align: left; cursor: pointer; }
+.picker-option:hover, .picker-option:focus-visible { outline: none; border-color: #d7e4d9; background: #edf4ee; }
+.picker-option strong { font-size: 11px; }
+.picker-option small { margin-left: auto; color: #79857c; font-size: 9px; }
+.picker-option-note { padding: 8px; color: #79857c; font-size: 10px; line-height: 1.4; }
+.path-add-from { margin: -8px 0 14px; color: #68766d; font-size: 11px; }
+.path-add-kinds { display: flex; gap: 18px; margin-bottom: 14px; }
+.path-add-kinds label { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); font-size: 12px; font-weight: 600; }
+.path-add-kinds input { accent-color: var(--leaf); }
+/* Inside a form grid (e.g. "Neuer Verbraucher") the choice keeps plain radio buttons, not the field style. */
+.form-grid .path-add-kinds input[type="radio"] { width: auto; height: auto; margin: 0; padding: 0; border: 0; box-shadow: none; }
+.form-grid .path-add-kinds { margin-bottom: 0; }
+.path-add-new { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0; border: 1px solid #ccd7ce; padding: 10px 12px 12px; }
+.path-add-new legend { padding: 0 5px; color: #68766d; font-size: 10px; font-weight: 700; }
+.path-add-hint { margin: 0; color: #79857c; font-size: 10px; line-height: 1.4; }
+.form-error { min-height: 15px; margin: 8px 0; color: var(--red); font-size: 10px; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 17px; }
+.dialog-actions .button-danger { margin-right: auto; }
+.graph-pdf-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; margin: 0; padding: 10px 12px; border: 1px solid #ccd7ce; }
+.graph-pdf-options legend { padding: 0 4px; color: #68766d; font-size: 10px; font-weight: 700; }
+.form-grid .graph-pdf-options label { display: flex; align-items: center; gap: 7px; color: var(--ink); font-size: 11px; font-weight: 500; }
+.form-grid .graph-pdf-options input { width: auto; height: auto; }
+.dialog-copy { margin: -6px 0 16px; color: #758078; font-size: 11px; line-height: 1.6; }
+.file-drop { display: flex; align-items: center; gap: 12px; min-height: 73px; padding: 12px; border: 1px dashed #b9cbbd; background: #eef4ee; cursor: pointer; }
+.file-drop input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+.file-glyph { width: 35px; height: 35px; display: grid; place-items: center; color: var(--leaf); border: 1px solid #bfd1c3; font-size: 20px; }
+.file-drop span:last-of-type { display: grid; gap: 4px; }
+.file-drop b { color: var(--pine); font-size: 11px; }
+.file-drop small { color: #859188; font-size: 10px; }
+.template-link { display: inline-block; margin-top: 11px; color: var(--leaf); font-size: 10px; text-decoration: none; }
+.template-link:hover { text-decoration: underline; }
+.preview-summary { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 12px; color: #77837b; font-size: 10px; }
+.preview-summary strong { color: var(--leaf); }.preview-summary span:nth-child(2) { color: var(--red); }
+.preview-table-wrap { max-height: 330px; overflow: auto; border: 1px solid var(--line); background: white; }
+.preview-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+.preview-table th { position: sticky; top: 0; padding: 8px; color: #6c7b70; background: #edf3ed; text-align: left; }
+.preview-table td { padding: 8px; border-top: 1px solid #edf0ec; vertical-align: top; }
+.check-ok { color: var(--leaf); }.check-error { color: var(--red); }
+
+.toast { position: fixed; right: 22px; bottom: 20px; z-index: 10; max-width: min(420px, calc(100vw - 30px)); padding: 12px 16px; color: white; background: var(--pine); font-size: 11px; opacity: 0; pointer-events: none; transform: translateY(8px); transition: .18s ease; }
+.toast.visible { opacity: 1; transform: translateY(0); }.toast.is-error { background: var(--red); }
+
+@media screen and (max-width: 860px) {
+  .topbar { gap: 16px; padding-right: 22px; padding-left: 22px; }
+  .topbar-brand-cluster { max-width: 230px; }
+}
+@media screen and (max-width: 640px) {
+  .topbar { min-height: 0; grid-template-columns: minmax(0, 1fr) auto; gap: 9px 12px; padding: 11px 15px 8px; }
+  .topbar-brand-cluster { max-width: none; gap: 3px; }
+  .brand-row { padding: 0; }
+  .brand-title { font-size: 16px; }
+  .crumb { gap: 5px; font-size: 7px; }
+  .main-search-control { grid-column: 1 / -1; grid-row: 2; max-width: none; }
+  .search-box { height: 39px; }
+  .main-search-control .search-caption { min-height: 15px; }
+  .settings-toggle { width: 34px; height: 34px; flex: 0 0 auto; }
+  .search-view { min-height: 0; padding: 25px 15px 45px; }
+  .search-view-heading h2 { font-size: 24px; }
+  .search-view .result-item { grid-template-columns: 68px minmax(0, 1fr) 14px; gap: 7px; min-height: 60px; padding: 8px; }
+  .search-view .result-copy strong { font-size: 10px; }
+  .search-view .result-copy small { font-size: 9px; }
+  .welcome-view { min-height: 0; padding: 24px 15px 35px; }
+  .settings-view { min-height: 0; padding: 28px 15px 45px; }
+  .settings-heading h2 { font-size: 28px; }
+  .settings-action-card { grid-template-columns: 34px minmax(0, 1fr) auto; gap: 9px; padding: 11px; }
+  .settings-action-icon { width: 32px; height: 32px; }
+  .settings-action-card .button { min-height: 32px; padding: 0 9px; font-size: 10px; }
+  .home-overview-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .overview-list { min-height: 0; padding: 28px 15px 45px; }
+  .overview-list-heading { align-items: flex-start; }
+  .overview-list-heading h2 { font-size: 28px; }
+  .overview-item { grid-template-columns: minmax(0, 1fr) auto 14px; }
+  .overview-item.overview-item-fuse { grid-template-columns: minmax(0, 1fr) 14px; }
+  .overview-fuse-canvas { min-width: 520px; grid-template-columns: minmax(135px, .55fr) minmax(0, 1fr); column-gap: 32px; }
+  .overview-item-type { display: none; }
+  .detail-view { padding: 30px 15px 45px; }
+  .detail-heading { padding-bottom: 20px; }
+  .detail-heading h2 { font-size: 31px; }
+  .detail-heading h2.has-parent-link { font-size: 25px; gap: 7px; }
+  .detail-parent-link { min-width: 0; grid-template-columns: auto 12px; column-gap: 7px; padding: 9px 11px; }
+  .detail-parent-link strong { font-size: 12px; }
+  .detail-title-separator { font-size: 14px; }
+  .address-badge { padding: 6px; font-size: 7px; }
+  .fuse-header-badge { min-width: 76px; padding: 5px 6px; }
+  .section-heading { align-items: flex-start; }
+  .section-heading h3 { font-size: 15px; }
+  .channel-tree { gap: 11px; padding: 11px 10px 12px 24px; }
+  .channel-tree::before { left: 14px; }
+  .channel-tree-branch { padding-left: 9px; }
+  .channel-tree-branch::before { left: -9px; width: 14px; }
+  .ets-object-entry { grid-template-columns: minmax(0, 1fr); }
+  .path-strip { align-items: stretch; gap: 5px; }
+  .path-node { min-width: 112px; padding: 8px; }
+  .path-node-button { min-width: 250px; }
+  .fuse-graph-canvas { min-width: 560px; column-gap: 36px; }
+  .path-node strong { font-size: 9px; }
+  .path-node small { max-width: 135px; }
+  .path-edge { font-size: 13px; }
+  .dialog { padding: 18px; }
+  .form-grid { grid-template-columns: 1fr; gap: 11px; }
+  .form-wide { grid-column: auto; }
+  .wire-color-options { gap: 5px; }
+  .wire-color-option { min-width: 48px; padding: 5px; }
+  .preview-table { min-width: 520px; }
+}
+/* Phones: readable type. The small labels and grey secondary texts of the desktop layout (8–10px, light grey on the
+   pale cards) are too small and too faint on a phone screen: larger sizes and darker grey. Screen only (print and the
+   Gesamtgraph keep their measured sizes). */
+@media screen and (max-width: 640px) {
+  :root { --muted: #56625b; }
+  /* Type labels (KLEMME, GERÄT · KANAL, SICHERUNG …). */
+  .path-node-type, .result-type, .overview-item-type, .column-label, .crumb, .brand-kicker, .detail-parent-link small,
+  .fuse-header-badge span, .address-badge, .overview-fuse-target > span, .overview-terminal-location,
+  .overview-device-label small, .overview-device-label > span, .overview-terminal-review .review-timestamp {
+    font-size: 9.5px; color: #4d5952;
+  }
+  /* Secondary texts (room, description, device, subtitles). Long ones wrap instead of being cut with "…". */
+  .path-node small, .relation-link small, .result-copy small, .overview-item-copy small, .overview-card small,
+  .overview-fuse-target > small, .overview-fuse-copy > small, .overview-element-description, .overview-terminal-element,
+  .channel-title small, .review-timestamp, .source-note, .picker-option small, .autocomplete-option small,
+  .fuse-header-badge small, .muted-inline, .stats-line, .database-mark {
+    font-size: 11.5px; color: #4d5952;
+  }
+  .path-node small, .result-copy small, .overview-item-copy small { max-width: none; overflow: visible; text-overflow: clip; white-space: normal; }
+  /* Names: Klemmen, Kanäle, Sicherungen, Verbraucher. */
+  .path-node strong, .relation-link, .overview-terminal-group-identity > strong, .overview-terminal-klemme-line > strong,
+  .overview-device-label strong, .overview-item-fuse-inline strong, .fuse-header-badge strong { font-size: 13px; }
+  .overview-card strong { min-width: 0; font-size: 12px; overflow-wrap: anywhere; }
+  .result-copy strong { font-size: 13px; }
+  /* Verbraucher page: the name as a heading of a sensible size beside the Sicherung/FI labels. */
+  .detail-heading-load h2 { font-size: 21px; }
+  /* The breadcrumb wraps rather than running into the settings button. */
+  .crumb { min-width: 0; flex-wrap: wrap; row-gap: 2px; }
+  /* Search hits: the type on top, the hit below it across the full width (long names wrap). */
+  .search-view .result-item { grid-template-columns: minmax(0, 1fr) 12px; row-gap: 3px; }
+  .search-view .result-copy strong { font-size: 13px; }
+  .search-view .result-copy small { color: #4d5952; font-size: 11.5px; white-space: normal; }
+  .search-view .result-type { grid-column: 1; grid-row: 1; }
+  .search-view .result-copy { grid-column: 1; grid-row: 2; }
+  .search-view .result-chevron { grid-column: 2; grid-row: 1 / span 2; }
+  .result-copy strong > span:first-child { white-space: normal; overflow-wrap: anywhere; }
+  /* List titles (long Verbraucher names) wrap instead of being cut with "…". */
+  .overview-item-copy strong { font-size: 13px; white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+  /* L/N/PE feeds of a Verbraucher and wire colour chips. */
+  .load-feed, .load-feed-none, .wire-chip { font-size: 12.5px; }
+  /* Forms and small buttons. */
+  .form-grid label, .path-add-hint, .form-error, .button-small, .tiny-action, .conductor-control, .search-filter,
+  .search-review-term, .wire-color-option, .settings-action-card p { font-size: 12px; }
+  .settings-action-card p { color: #4d5952; }
+  /* Settings cards: the switch or button goes below the text, so the text keeps the card's width. */
+  .settings-action-card { grid-template-columns: 34px minmax(0, 1fr); }
+  .settings-action-card > :last-child { grid-column: 2; justify-self: start; }
+  /* Start page: the count goes below the name, so long names ("Gruppenadressen") do not push it out of the card. */
+  .overview-card { grid-template-columns: minmax(0, 1fr); }
+  /* Two-column diagrams (Sicherung page: Kanal → Klemme; device page: Klemme → Sicherung) fit the phone width:
+     narrower columns and gaps, the text wraps; only deeper trees still scroll sideways. */
+  .tree-graph-canvas { grid-template-columns: repeat(var(--columns), minmax(120px, 1fr)); min-width: calc(var(--columns) * 120px + (var(--columns) - 1) * 22px); column-gap: 22px; }
+  .fuse-graph-canvas, .channel-fuse-graph .fuse-graph-canvas { min-width: 0; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 22px; }
+  .tree-graph-node .path-node, .fuse-graph-canvas .path-node { padding: 8px 9px; }
+  .fuse-graph-canvas .path-node small, .channel-graph-terminal-link strong { white-space: normal; overflow-wrap: anywhere; }
+}

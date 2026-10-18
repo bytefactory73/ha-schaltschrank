@@ -1,0 +1,7 @@
+configuration:
+  titel:
+    name: Title
+    description: "Small line at the top left above \"Schaltschrank\", e.g. the name of the house or the ETS project. Empty: only \"Schaltschrank\"."
+  sicherungen:
+    name: Number of backups
+    description: "The app keeps this many database backups (made at every start and before every import); older ones are deleted."

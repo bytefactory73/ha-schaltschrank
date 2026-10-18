@@ -1,0 +1,29 @@
+# Home Assistant add-on: the cabinet browser in the sidebar (ingress; Home Assistant does the login).
+name: Schaltschrank
+version: "1.0.6"
+slug: schaltschrank
+description: Schaltschrank-Datenbank mit Klemmen, Sicherungen, FI und der Zuordnung der KNX-Entitäten
+url: https://github.com/bytefactory73/ha-schaltschrank
+arch:
+  - aarch64
+  - amd64
+init: false
+ingress: true
+ingress_port: 8765
+panel_icon: mdi:flash
+panel_title: Schaltschrank
+# Read the Home Assistant API (live states) with the Supervisor token; nothing is written to Home Assistant.
+homeassistant_api: true
+# The config folder read-only, for the KNX panel entities and the entity registry in `.storage`.
+map:
+  - type: homeassistant_config
+    read_only: true
+# "Konfiguration" tab: the small title line above "Schaltschrank" (labels in translations/de.yaml).
+options:
+  titel: ""
+  sicherungen: 20
+schema:
+  titel: str?
+  sicherungen: int(1,500)
+# Stop the add-on during a Home Assistant backup, so the SQLite database in /data is copied consistently.
+backup: cold
