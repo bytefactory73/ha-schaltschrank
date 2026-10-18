@@ -1,0 +1,7 @@
+configuration:
+  titel:
+    name: Titel
+    description: "Kleine Zeile oben links über „Schaltschrank“, z. B. der Name des Hauses oder des ETS-Projekts. Leer: nur „Schaltschrank“."
+  sicherungen:
+    name: Anzahl Sicherungen
+    description: "So viele Sicherungen der Datenbank (bei jedem Start und vor jedem Import) behält die App; ältere werden gelöscht."
