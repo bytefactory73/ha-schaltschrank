@@ -2264,8 +2264,9 @@ class Handler(BaseHTTPRequestHandler):
                     return
                 node_id = connections.ensure_fuse_node(db, fuse_id)
             if str(node_id or "").isdigit():
-                node = db.execute("SELECT terminal_id, node_type FROM connection_nodes WHERE id=? AND node_type<>'load'",
-                                  (int(node_id),)).fetchone()
+                # A Verbraucher node only takes Klemmen (behind its output, e.g. Steckdose 3 beside Steckdose 2 at a UPS).
+                node = db.execute("SELECT terminal_id, node_type FROM connection_nodes WHERE id=? AND (node_type<>'load' OR ?)",
+                                  (int(node_id), kind == "terminal")).fetchone()
                 if not node:
                     raise ValueError("Connection node not found.")
                 node_id = int(node_id)

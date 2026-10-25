@@ -387,7 +387,7 @@ body.graph-printing .graph-card.graph-fuse { width: 94px; }
    Only as high as its wire label, so the Klemme of the row (L) and its Verbraucher do not move far down. */
 .graph-join-wire.graph-join-shared { min-height: 14px; }
 /* Its wire is drawn into the Verbraucher in one piece (drawGraphRails): no CSS stub of its own. */
-.graph-join-wire.graph-join-svg::after { display: none; }
+.graph-join-wire.graph-join-svg::after, .graph-join-wire.graph-join-svg > .graph-join-phase { display: none; }
 /* A Klemme whose N and PE wires all come from elsewhere (only such empty rows): the rows lie over the top of its card,
    so PE and N enter the Verbraucher just above the L wire and the Klemme hardly moves down (graphLiftStacks). */
 .graph-klemmen-stack:not(.graph-klemmen-box):not(:has(> .graph-join-wire:not(.graph-join-shared), > .graph-join-missing)) > .graph-join-shared { min-height: 8px; }
@@ -482,15 +482,32 @@ body.graph-printing .graph-klemmen-stack:not(.graph-klemmen-box) > .graph-join-p
 .graph-node-stack > .graph-children > .graph-child > .graph-node > .graph-card { align-self: stretch; }
 .graph-node-stack .graph-load .graph-card-main { align-content: start; }
 /* Shared Verbraucher block: several Sicherung rows (e.g. L1/L2/L3) run into one Verbraucher box at the right. */
-.graph-load-group { display: flex; align-items: stretch; }
+/* Only as wide as its rows and Verbraucher (stretched to the section, its wires would run far across empty space). */
+.graph-load-group { display: flex; align-items: stretch; width: max-content; }
 .graph-load-group-feeds { display: flex; flex-direction: column; }
 /* Each row stretches to the right edge, so its wire reaches the shared box whatever the path's length. */
 .graph-load-group-row .graph-children { flex: 1 1 auto; }
 .graph-load-group-row + .graph-load-group-row { margin-top: 6px; }
 .graph-load-tail { position: absolute; top: var(--lane); left: var(--graph-gap); right: 0; border-top: 1.5px solid var(--graph-wire); }
+/* A tail beside further followers (86/u on to the Kraftsteckdose and to its own Schukosteckdose): its row keeps the
+   height of a card, so the next follower stands below the wire, not over it. */
+.graph-child:has(> .graph-load-tail):not(:only-child) { min-height: calc(var(--lane) * 2); }
 /* N and PE Klemmen once below the rows, in the column of the L Klemmen, wired into the box. */
 .graph-load-group-join { align-self: flex-end; width: var(--klemme-width); margin: 6px calc(var(--graph-gap) * 2) 0 0; }
+/* N and PE directly at the conductor (Herdanschluss without N/PE Klemmen): no Klemmen box, only the wires. */
+.graph-load-group-join:not(:has(.graph-card, .graph-join-missing)) { border: 0; background: transparent; box-shadow: none; }
+.graph-load-group-join:not(:has(.graph-card, .graph-join-missing)) > * { border-top: 0; }
 .graph-load-group > .graph-card.graph-load { align-self: stretch; margin: 3px 0; }
+/* Further Verbraucher of the rows (Schukosteckdose beside the Kraftsteckdose) stand in its column below it: the rows
+   and the shared Verbraucher in the first grid row, they in the second; their L wire comes down in front of the
+   column (drawGraphRails, `data-side-from`), their N/PE rows lie left of the card in the free space. */
+.graph-load-group.graph-load-group-sides { display: grid; grid-template-columns: max-content max-content; justify-content: start; align-items: stretch; }
+.graph-load-group-sides > .graph-load-group-feeds { grid-column: 1; grid-row: 1; }
+.graph-load-group-sides > .graph-card.graph-load { grid-column: 2; grid-row: 1; }
+.graph-load-group-side { grid-column: 2; grid-row: 2; display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.graph-side-load .graph-load-join { position: relative; }
+/* (Their rows at the card's height below its L wire, so N and PE enter the card.) */
+.graph-side-load .graph-join-feeds { position: absolute; right: calc(100% + var(--graph-gap)); top: 0; bottom: 0; padding-top: 18px; }
 .graph-load-group > .graph-card.graph-load .graph-card-main { align-content: start; }
 .graph-rail { stroke-width: 3; }
 .graph-tap { stroke-width: 1.2; opacity: .7; }

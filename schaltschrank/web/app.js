@@ -1236,10 +1236,12 @@ function graphCardMarkup(node, open, badge = "") {
   const conductor = node.type === "phase" ? ` graph-conductor graph-conductor-${esc(node.code.toLowerCase())}` : "";
   const target = node.entity_type && node.entity_id ? ` data-type="${esc(node.entity_type)}" data-id="${esc(node.entity_id)}"` : " disabled";
   // In the Sicherungen view a Verbraucher gets its N and PE Klemmen as cards in their own wires.
-  if (node.type === "load" && !node.plain && graphState.loadFeeds?.has(node.load_id)) return graphLoadJoinMarkup(node, graphState.loadFeeds.get(node.load_id));
+  if (node.type === "load" && !node.plain && graphState.loadFeeds?.has(node.load_id)) return graphLoadJoinMarkup(node, graphState.loadFeeds.get(node.load_id), open);
   // `fiOut`: an FI box whose phases leave it one by one; `fiFeed`: a Sicherung fed by such a phase line.
   // `attrs`: further data attributes (N/PE branch rows, see `graphJoinKlemmen`).
+  // `output`: a Verbraucher with Klemmen behind its output; their N/PE wires leave this card (drawGraphRails).
   const taps = `${graphTapsAttribute(node.taps)}${node.bus ? ` data-bus="${esc(node.bus)}"` : ""}${node.attrs || ""}`
+    + `${node.type === "load" && node.children?.length ? ` data-output="${esc(node.load_id)}"` : ""}`
     + `${node.fiOut ? ` data-fi-out="${esc(node.fiOut)}"` : ""}`
     + `${node.fiFeed ? ` data-fi="${esc(node.fiFeed.fi)}" data-fi-feed="${esc(JSON.stringify(node.fiFeed.phases))}"` : ""}`;
   const toggle = node.children.length
@@ -1354,6 +1356,8 @@ function graphAlignSharedLoads(area, scale) {
     parent.set(find(a), find(b));
   };
   area.querySelectorAll("[data-join-ref]").forEach((row) => {
+    // (A Verbraucher below a shared one is wired in front of its column: nothing to align.)
+    if (row.closest(".graph-side-load")) return;
     // A Klemmen box at the L Klemme stands further left: it is not aligned with the rows it feeds.
     const sourceRow = area.querySelector(`[data-join-key="${CSS.escape(row.dataset.joinRef)}"]`);
     const source = sourceRow?.classList.contains("graph-join-head") ? null : sourceRow?.closest(JOIN_STACKS);
@@ -1420,6 +1424,8 @@ function graphLiftStacks(area) {
     // Up: the cards in front of it on the same line (Sicherung, Kanal, …) as long as it is the first follower.
     for (let node = start; node;) {
       raise(node, lift);
+      // A Verbraucher with an output (UPS) spans its rows: its wires out take the lane, nothing in front of it moves.
+      if (node.querySelector(":scope > .graph-card.graph-load")) break;
       let child = node.parentElement;
       while (child && child !== area && !child.classList.contains("graph-child") && !child.classList.contains("graph-node")) child = child.parentElement;
       if (!child?.classList.contains("graph-child") || child.parentElement.classList.contains("graph-fi-out")
@@ -1444,12 +1450,15 @@ function graphLiftStacks(area) {
     node.style.setProperty("--lane", lane);
     node.dataset.lift = "1";
     const child = node.parentElement;
-    if (child?.classList.contains("graph-child")) {
+    // The wire into a Verbraucher with an output keeps the lane of the Klemme in front of it (its own lift only
+    // moves the wires out of it).
+    if (child?.classList.contains("graph-child") && !node.querySelector(":scope > .graph-card.graph-load")) {
       child.style.setProperty("--lane", lane);
       child.dataset.lift = "1";
     }
     const card = node.querySelector(":scope > .graph-card");
-    if (card) {
+    // (The card of a Verbraucher with an output stays at the top: it spans the rows of its followers.)
+    if (card && !card.classList.contains("graph-load")) {
       card.style.marginTop = `${(parseFloat(getComputedStyle(card).marginTop) || 0) + lift}px`;
       card.dataset.lift = "1";
     }
@@ -1506,16 +1515,24 @@ function drawGraphRails() {
     });
     graphLiftStacks(area);
     graphAlignSharedLoads(area, scale);
-    const local = (rect) => ({ left: (rect.left - box.left) / scale, top: (rect.top - box.top) / scale,
-      bottom: (rect.bottom - box.top) / scale, height: rect.height / scale });
+    const local = (rect) => ({ left: (rect.left - box.left) / scale, right: (rect.right - box.left) / scale,
+      top: (rect.top - box.top) / scale, bottom: (rect.bottom - box.top) / scale, height: rect.height / scale });
     // An empty N/PE row whose wire is drawn here runs into its Verbraucher in one piece: the left edge of the
     // Verbraucher, and its CSS stub is hidden (a stub beside a drawn wire shows a step when they shift apart in print).
     area.querySelectorAll(".graph-join-svg").forEach((row) => row.classList.remove("graph-join-svg"));
-    const graphLoadEntry = (row) => {
+    // `y`: height the wire enters at (default: the row's own).
+    const graphLoadEntry = (row, y = graphWireMid(local(row.getBoundingClientRect()), row.dataset.joinCode === "PE" ? "PE" : "N")) => {
       const load = row.closest(".graph-node-stack, .graph-load-join, .graph-load-group")?.querySelector(".graph-card.graph-load");
       if (!load) return null;
       row.classList.add("graph-join-svg");
-      return local(load.getBoundingClientRect()).left;
+      const x = local(load.getBoundingClientRect()).left;
+      // The conductor label goes with the wire to the Verbraucher, not to the empty row (it may stand far left).
+      const code = row.dataset.joinCode === "PE" ? "PE" : "N";
+      if (graphState.rails[code]) {
+        const label = row.querySelector(".graph-join-phase")?.textContent || code;
+        markup += `<text class="graph-wire-label" x="${x - wireGap + 2}" y="${y - 2}" fill="${graphInk(RAIL_COLORS[code])}">${esc(label)}</text>`;
+      }
+      return x;
     };
     const width = area.scrollWidth;
     const height = area.scrollHeight;
@@ -1576,6 +1593,99 @@ function drawGraphRails() {
         else markup += `<circle cx="${x}" cy="${points[0][1]}" r="2.8" fill="${graphInk(RAIL_COLORS[tap.code])}"/>`;
       });
     });
+    // A further Verbraucher of a row below the shared one (Schukosteckdose of 86/u below the Kraftsteckdose): its L
+    // wire branches off the row's wire to the shared box in the gap in front of the column and runs down into it.
+    area.querySelectorAll("[data-side-from]").forEach((side) => {
+      const code = side.dataset.sideCode;
+      const node = area.querySelector(`[data-graph-toggle="${CSS.escape(side.dataset.sideFrom)}"]`)?.closest(".graph-node");
+      const tail = node?.querySelector(":scope > .graph-children > .graph-child > .graph-load-tail");
+      const card = side.querySelector(".graph-card.graph-load");
+      if (!tail || !card || (code && code in graphState.rails && !graphState.rails[code])) return;
+      const from = local(tail.getBoundingClientRect());
+      const to = local(card.getBoundingClientRect());
+      const x = Math.round(to.left - wireGap / 2) + 0.5;
+      const y0 = Math.round(from.top) + 0.5;
+      const y1 = Math.round(to.top + wireLane) + 0.5;
+      const ink = graphInk(RAIL_COLORS[code] || "#6b7570");
+      markup += `<polyline class="graph-wire-line graph-join-route" points="${x},${y0} ${x},${y1} ${to.left},${y1}" fill="none" stroke="${ink}"/>`;
+      markup += `<circle cx="${x}" cy="${y0}" r="2.6" fill="${ink}"/>`;
+      // Labels right in front of the card, behind the vertical wires.
+      markup += `<text class="graph-wire-label" x="${to.left - 12}" y="${y1 - 2}" fill="${ink}">${esc(code)}</text>`;
+      // Its N and PE from the same Klemmen as the shared Verbraucher (85/o, 85): off their wire in front of the
+      // column (N 5px, PE 10px left of the L wire), down to the rows and into the card.
+      side.querySelectorAll("[data-join-ref]").forEach((row) => {
+        const role = row.dataset.joinCode === "PE" ? "PE" : "N";
+        const sourceRow = area.querySelector(`[data-join-key="${CSS.escape(row.dataset.joinRef)}"]`)
+          || area.querySelector(`[data-join-card="${CSS.escape(row.dataset.joinRef)}"]`)?.closest(".graph-join-wire");
+        if (!sourceRow || !graphState.rails[role]) return;
+        row.classList.add("graph-join-svg");
+        const yFrom = Math.round(graphWireMid(local(sourceRow.getBoundingClientRect()), role)) + 0.5;
+        const yTo = Math.round(graphWireMid(local(row.getBoundingClientRect()), role)) + 0.5;
+        const xRole = x - (role === "PE" ? 10 : 5);
+        const roleInk = graphInk(RAIL_COLORS[role]);
+        markup += graphWireMarkup([[xRole, yFrom], [xRole, yTo], [to.left, yTo]], role, "graph-join-route");
+        markup += `<circle cx="${xRole}" cy="${yFrom}" r="2.6" fill="${roleInk}"/>`;
+        markup += `<text class="graph-wire-label" x="${to.left - 12}" y="${yTo - 2}" fill="${roleInk}">${esc(row.querySelector(".graph-join-phase")?.textContent || role)}</text>`;
+      });
+    });
+    // N/PE Klemmen behind a Verbraucher's output (UPS -> Steckdose 2/n, Steckdose 3/n): their wire leaves the
+    // Verbraucher card at the right. A Klemme beside the card gets a straight wire; Klemmen further down branch off
+    // one vertical wire per conductor in the gap behind the card (PE in front of N, dots where a wire branches off).
+    const outputWires = new Map();
+    area.querySelectorAll("[data-from-output]").forEach((card) => {
+      const code = card.closest(".graph-join-pe") ? "PE" : "N";
+      const source = area.querySelector(`[data-output="${CSS.escape(card.dataset.fromOutput)}"]`);
+      if (!source || !graphState.rails[code]) return;
+      const group = outputWires.get(`${card.dataset.fromOutput}|${code}`) || { code, source, cards: [] };
+      group.cards.push(card);
+      outputWires.set(`${card.dataset.fromOutput}|${code}`, group);
+    });
+    outputWires.forEach(({ code, source, cards }) => {
+      const from = local(source.getBoundingClientRect());
+      const right = from.left + source.getBoundingClientRect().width / scale;
+      const ink = graphInk(RAIL_COLORS[code]);
+      const all = cards.map((card) => {
+        const to = cardRects.get(card) || local(card.getBoundingClientRect());
+        // Top of the Klemme's box: the free gap above it carries the wire after a row break.
+        const box = local((card.closest(".graph-klemmen-box") || card).getBoundingClientRect());
+        return { x: to.left, y: Math.round(graphWireMid(to, code)) + 0.5, top: box.top };
+      }).sort((a, b) => a.y - b.y);
+      // Klemmen on a new line further left (print column limit): down beside the card, left through the gap above
+      // that line and into them from the left (PE and N in lanes of their own).
+      const wrapped = all.filter((end) => end.x < right);
+      if (wrapped.length) {
+        const xOut = Math.round(right + (code === "PE" ? 8 : 14)) + 0.5;
+        const yOut = Math.round(from.bottom - (code === "PE" ? 10 : 18)) + 0.5;
+        // Between the L wire running back (about 22px above the line) and the boxes; close in front of the Klemmen,
+        // right of the L wire's branch line (the colour chips name the conductor, no label in the narrow gap).
+        const yGap = Math.round(Math.min(...wrapped.map((end) => end.top)) - (code === "PE" ? 8 : 15)) + 0.5;
+        const xIn = Math.round(Math.min(...wrapped.map((end) => end.x)) - (code === "PE" ? 12 : 6)) + 0.5;
+        const yLow = Math.max(...wrapped.map((end) => end.y));
+        markup += graphWireMarkup([[right, yOut], [xOut, yOut], [xOut, yGap], [xIn, yGap], [xIn, yLow]], code, "graph-join-route");
+        wrapped.forEach((end) => {
+          markup += graphWireMarkup([[xIn, end.y], [end.x, end.y]], code, "graph-join-route");
+          if (end.y < yLow) markup += `<circle cx="${xIn}" cy="${end.y}" r="2.6" fill="${ink}"/>`;
+        });
+      }
+      const ends = all.filter((end) => end.x >= right);
+      if (!ends.length) return;
+      // Where the wire leaves the card: at the first Klemme beside it, else near its bottom.
+      const beside = ends.find((end) => end.y > from.top + 4 && end.y < from.bottom - 4);
+      const y0 = beside ? beside.y : Math.round(from.bottom - (code === "PE" ? 10 : 18)) + 0.5;
+      const x = Math.round(right + (code === "PE" ? 8 : 14)) + 0.5;
+      if (ends.some((end) => end.y !== y0)) {
+        markup += graphWireMarkup([[right, y0], [x, y0]], code, "graph-join-route");
+        const ys = [y0, ...ends.map((end) => end.y)];
+        markup += graphWireMarkup([[x, Math.min(...ys)], [x, Math.max(...ys)]], code, "graph-join-route");
+        // Junctions: inside the vertical wire, and where it leaves the straight wire to the Klemme beside the card.
+        [...new Set(ys)].filter((y) => (y > Math.min(...ys) && y < Math.max(...ys)) || (beside && y === y0))
+          .forEach((y) => { markup += `<circle cx="${x}" cy="${y}" r="2.6" fill="${ink}"/>`; });
+      }
+      ends.forEach((end) => {
+        markup += graphWireMarkup([[end.y === y0 ? right : x, end.y], [end.x, end.y]], code, "graph-join-route");
+        markup += `<text class="graph-wire-label" x="${end.x - wireGap + 2}" y="${end.y - 2}" fill="${ink}">${code}</text>`;
+      });
+    });
     // An N/PE Klemme drawn once below a Sicherung but feeding several Verbraucher: its wire branches off (dot) in
     // the gap behind the drawn chain, runs down into the free row gap below that block, along it to the gap in
     // front of the further Verbraucher and down into its empty row, whose stub leads into the Verbraucher.
@@ -1588,6 +1698,8 @@ function drawGraphRails() {
       const routes = [];
       area.querySelectorAll("[data-join-ref]").forEach((row) => {
         row.style.removeProperty("--join-lane");
+        // (Rows of a Verbraucher below a shared one are wired with its L wire, above.)
+        if (row.closest(".graph-side-load")) return;
         const source = area.querySelector(`[data-join-key="${CSS.escape(row.dataset.joinRef)}"]`);
         // Rows fed from a Klemmen box (12/o in the box of 12/u) are wired from there (see below).
         if (!source || source.classList.contains("graph-join-head")) return;
@@ -1615,13 +1727,17 @@ function drawGraphRails() {
         // The wire turns in the free gap below the drawn block; a row far below in another column (a new line of the
         // print column limit) is reached through the gap right above its own block, not around it from below.
         const target = local((row.closest(".graph-node-stack, .graph-load-join, .graph-load-group") || row).getBoundingClientRect());
-        const yGap = xIn !== xOut && target.top > block.bottom + 20 ? target.top - 6 - shift : block.bottom + 5 + shift;
+        const y1 = graphWireMid(to, code);
+        // In one column the wire runs straight to the row (also up to a Verbraucher above, never round below the block).
+        const yGap = xIn === xOut ? y1 : target.top > block.bottom + 20 ? target.top - 6 - shift : block.bottom + 5 + shift;
         routes.push({ row, code, shift, owner, xOut, xRow, xIn,
-          y0: graphWireMid(from, code), yGap: Math.round(yGap) + 0.5, y1: graphWireMid(to, code) });
+          y0: graphWireMid(from, code), yGap: Math.round(yGap) + 0.5, y1 });
       });
       const owners = new Map();
       routes.forEach((route) => {
         const owner = owners.get(route.owner) || { x: route.xOut - route.shift, top: route.y0, bottom: route.y0 };
+        // A wire up to a Verbraucher above takes its lane from there on.
+        owner.top = Math.min(owner.top, route.y1);
         owner.bottom = Math.max(owner.bottom, route.y1, route.yGap);
         owners.set(route.owner, owner);
       });
@@ -1685,8 +1801,30 @@ function drawGraphRails() {
       addFromWire(card.dataset.joinFrom, code, cardRects.get(card).left, graphWireMid(cardRects.get(card), code), cardRects.get(card));
     });
     area.querySelectorAll("[data-join-ref]").forEach((row) => {
-      if (!area.querySelector(`[data-join-key="${CSS.escape(row.dataset.joinRef)}"]`)?.classList.contains("graph-join-head")) return;
+      if (row.closest(".graph-side-load")) return;
+      // Fed from a Klemmen box, or from a card inside a drawn chain (no row of its own, e.g. 300/n of 95/o → 300/n
+      // → 400/6): the wire leaves that card.
+      const sourceRow = area.querySelector(`[data-join-key="${CSS.escape(row.dataset.joinRef)}"]`);
+      if (sourceRow ? !sourceRow.classList.contains("graph-join-head") : !area.querySelector(`[data-join-card="${CSS.escape(row.dataset.joinRef)}"]`)) return;
       const code = row.dataset.joinCode === "PE" ? "PE" : "N";
+      // The Klemme stands at the height of its Verbraucher with nothing in between (last box of a line, 67b/mi ->
+      // Tiefkühlschrank): one straight wire in its own height.
+      const sourceCard = area.querySelector(`[data-join-card="${CSS.escape(row.dataset.joinRef)}"]`);
+      const loadCard = row.closest(".graph-node-stack, .graph-load-join, .graph-load-group")?.querySelector(".graph-card.graph-load");
+      if (sourceCard && loadCard && graphState.rails[code]) {
+        const from = cardRects.get(sourceCard) || local(sourceCard.getBoundingClientRect());
+        const target = local(loadCard.getBoundingClientRect());
+        const sourceRow = sourceCard.closest(".graph-join-wire") || sourceCard;
+        const y0 = Math.round(local(sourceRow.getBoundingClientRect()).top + sourceRow.clientTop + sourceRow.clientHeight / 2) + 0.5;
+        const free = from.right < target.left && y0 > target.top + 4 && y0 < target.bottom - 4
+          && !obstacles.some((box) => box !== from && box.left > from.right - 1 && box.right < target.left + 1 && box.top < y0 && box.bottom > y0);
+        if (free) {
+          // First the entry (it adds the conductor label to `markup`), then the wire.
+          const entry = graphLoadEntry(row, y0);
+          markup += graphWireMarkup([[from.right, y0], [entry, y0]], code, "graph-join-route");
+          return;
+        }
+      }
       const to = local(row.getBoundingClientRect());
       const stub = to.left + row.getBoundingClientRect().width / scale + graphAlignExtra(row) + wireGap / 2 + (code === "PE" ? 6 : 0);
       addFromWire(row.dataset.joinRef, code, stub, graphWireMid(to, code), null, graphLoadEntry(row));
@@ -1710,14 +1848,35 @@ function drawGraphRails() {
       const ink = graphInk(RAIL_COLORS[code]);
       // PE 6px in front of N, so the two wires out of one Klemmen box never lie on top of each other.
       const lane = code === "PE" ? 6 : 0;
+      // Klemmen on a new line further left (print column limit): like the L wire of the break, out at the right,
+      // down beside the block, back left in the gap above their box and into them from the left.
+      const wrapped = ends.filter(([x1]) => x1 < rect.right);
+      if (wrapped.length) {
+        const block = local((source.closest(".graph-klemmen-box") || source).getBoundingClientRect());
+        const xOut = Math.round(block.right + (code === "PE" ? 6 : 12)) + 0.5;
+        const cardOf = (rectOf) => [...cardRects].find(([, value]) => value === rectOf)?.[0];
+        wrapped.forEach(([x1, y1, target]) => {
+          const box = target ? cardOf(target)?.closest(".graph-klemmen-box") : null;
+          const top = box ? local(box.getBoundingClientRect()).top : (target?.top ?? y1) - 4;
+          const yGap = Math.round(top - (code === "PE" ? 8 : 15)) + 0.5;
+          // Left of the lanes a Verbraucher output uses there (PE 12px, N 6px in front of the Klemmen).
+          const xIn = Math.round(x1 - (code === "PE" ? 22 : 28)) + 0.5;
+          markup += graphWireMarkup([[rect.right, y0], [xOut, y0], [xOut, yGap], [xIn, yGap], [xIn, y1], [x1, y1]], code, "graph-join-route");
+        });
+        ends = ends.filter(([x1]) => x1 >= rect.right);
+        if (!ends.length) return;
+      }
       // A vertical wire in the column gap right behind the Klemme, or right in front of a row it feeds.
       const behind = Math.round(rect.right + Math.max(3, Math.max(4, Math.min(wireGap, Math.min(...ends.map(([x1]) => x1)) - rect.right) / 2) - lane)) + 0.5;
-      const before = (x1) => Math.round(x1 - Math.max(3, Math.min(wireGap, x1 - rect.right) / 2 + lane)) + 0.5;
+      // (A Klemme further left than the source, after a row break: half a gap in front of it, N and PE apart.)
+      const before = (x1) => Math.round(x1 - (x1 < rect.right ? wireGap / 2 + lane : Math.max(3, Math.min(wireGap, x1 - rect.right) / 2 + lane))) + 0.5;
       const path = (x, [x1, y1]) => [[rect.right, y0], [x, y0], [x, y1], [x1, y1]];
       const inChain = !source.closest(".graph-join-head");
       // One vertical wire for all rows when it passes no card: every piece once (overlapping lines would look
       // thicker), junction dots where it runs on.
-      const x = [behind, ...ends.map(([x1]) => before(x1))].find((candidate) => ends.every((end) => !crossesCards(path(candidate, end), [rect, end[2]])));
+      // A wire enters its Klemme from the left: the vertical wire never stands right of it (after a row break the
+      // Klemme stands further left than the source; then it is reached through a free gap, below).
+      const x = [behind, ...ends.map(([x1]) => before(x1))].find((candidate) => candidate > rect.right && ends.every((end) => candidate < end[0] && !crossesCards(path(candidate, end), [rect, end[2]])));
       if (x !== undefined) {
         const ys = [y0, ...ends.map(([, y1]) => y1)];
         const low = Math.min(...ys);
@@ -1741,7 +1900,8 @@ function drawGraphRails() {
         const merged = graphBlockedSpans([...obstacles, ...wrapLines.filter((line) => !line.vertical)], left, right, [rect, target]);
         const corridors = merged.slice(1).map(([top], index) => (merged[index][1] + top) / 2 - lane)
           .sort((a, b) => Math.abs(a - y0) - Math.abs(b - y0));
-        const points = [behind, xb].map((candidate) => path(candidate, end)).find((candidate) => !crossesCards(candidate, [rect, target]))
+        // A straight turn only right of the source and left of the target (never back through the source card).
+        const points = [behind, xb].filter((candidate) => candidate < x1 && candidate > rect.right).map((candidate) => path(candidate, end)).find((candidate) => !crossesCards(candidate, [rect, target]))
           || corridors.map((y) => [[rect.right, y0], [behind, y0], [behind, Math.round(y) + 0.5], [xb, Math.round(y) + 0.5], [xb, y1], [x1, y1]])
             .find((candidate) => !crossesCards(candidate, [rect, target]))
           || path(behind, end);
@@ -1868,9 +2028,12 @@ function graphKlemmenBoxMarkup(node, open, load) {
   return `<div class="graph-klemmen-stack graph-klemmen-box">${graphCardMarkup({ ...node, label: "Klemmen" }, open)}${graphJoinKlemmen(graphState.loadFeeds.get(load.load_id), "", true)}</div>`;
 }
 
-// Cable of a Klemme: its location and number (14/u, 14/o and 14 are one cable).
+// Cable of a Klemme: its location and number (14/u, 14/o and 14 are one cable). A numeric position is a slot of a
+// terminal strip (300/6, 300/10 and 300/n are no cable): such a Klemme is a cable of its own.
 function graphCable(terminal) {
-  return `${terminal.location}|${graphTitle(terminal).split("/")[0]}`;
+  const title = graphTitle(terminal);
+  const [number, position = ""] = title.split("/");
+  return `${terminal.location}|${/^\d+$/.test(position) ? title : number}`;
 }
 
 // The N or PE Klemme of a Verbraucher belongs to the cable of this L Klemme.
@@ -1888,7 +2051,7 @@ function graphCableLoad(node, open) {
   const walk = (current) => current.children.forEach((child) => {
     if (child.type === "load") {
       // A tail is the wire on to a shared Verbraucher box already drawn elsewhere.
-      if (!child.tail && graphState.loadFeeds.has(child.load_id) && graphSameCable(node, child)) found.push(child);
+      if (!child.tail && graphLoadIsEnd(child) && graphState.loadFeeds.has(child.load_id) && graphSameCable(node, child)) found.push(child);
     } else if (child.children.length && (child.forceOpen || !graphState.collapsed.has(child.id))) {
       walk(child);
     }
@@ -1908,8 +2071,12 @@ function graphCableHeads(node, open) {
     if (child.type === "load") {
       if (child.tail || !graphState.loadFeeds.has(child.load_id)) return;
       Object.keys(heads).forEach((role) => {
-        const head = graphFeedChain(graphState.loadFeeds.get(child.load_id), role)?.[0];
-        if (head && graphCable(head) === cable && !graphState.joinSeen.has(graphJoinKey(role, [head]))) heads[role].set(head.entity_id, head);
+        const load = graphState.loadFeeds.get(child.load_id);
+        const head = graphFeedChain(load, role)?.[0];
+        const key = head ? graphJoinKey(role, [head]) : "";
+        // `output`: the Verbraucher whose output feeds the chain (UPS -> Steckdose 2/n), else a busbar does.
+        const output = head ? graphFeedOutput(load.feeds.find((feed) => feed.role === role)) : null;
+        if (head && graphCable(head) === cable && !graphState.joinSeen.has(key) && !graphState.joinDrawn?.has(key)) heads[role].set(head.entity_id, { ...head, output });
       });
     } else if (graphIsOpen(child)) {
       walk(child);
@@ -1926,9 +2093,56 @@ function graphCableHeadsMarkup(heads) {
     const key = graphJoinKey(role, [terminal]);
     graphState.joinSeen.add(key);
     graphState.joinHeads.add(key);
-    const taps = graphFeedTaps(role, terminal.wire_phase || role);
-    return `<div class="graph-join-wire graph-join-${role.toLowerCase()} graph-join-head" data-join-key="${esc(key)}">${graphJoinCardMarkup(role, [terminal], 0, { taps })}</div>`;
+    const taps = terminal.output ? null : graphFeedTaps(role, terminal.wire_phase || role);
+    return `<div class="graph-join-wire graph-join-${role.toLowerCase()} graph-join-head" data-join-key="${esc(key)}">${graphJoinCardMarkup(role, [terminal], 0, { taps, output: terminal.output })}</div>`;
   }).join("")).join("");
+}
+
+// A Klemmen box with N/PE Klemmen of its cable (Steckdose 2/l with 2/n and 2/pe) followed by one line of Klemmen to
+// one Verbraucher (200/20 -> 67a/li -> Tiefkühlschrank): when the N and PE chains have as many Klemmen left as the
+// line (200/19 -> 67b/mi, 200/18 -> 67c/re), each Klemme of the line gets the ones of its column in its box
+// (`graphState.joinAligned`: node id -> { chains, index }).
+function graphAlignChains(node, heads) {
+  const line = [];
+  let current = node;
+  while (graphIsOpen(current) && current.children.length === 1 && current.children[0].type === "terminal") {
+    current = current.children[0];
+    line.push(current);
+  }
+  const load = graphIsOpen(current) && current.children.length === 1 ? current.children[0] : null;
+  if (!line.length || load?.type !== "load" || !graphLoadIsEnd(load) || !graphState.loadFeeds?.has(load.load_id) || !graphState.joinAligned) return;
+  const feeds = graphState.loadFeeds.get(load.load_id);
+  const chains = {};
+  for (const role of ["PE", "N"]) {
+    const chain = graphFeedChain(feeds, role);
+    // The chain starts with the head in this box and has one Klemme for every Klemme of the line.
+    if (!chain || chain.length !== line.length + 1 || !heads[role].some((head) => head.entity_id === chain[0].entity_id)) return;
+    chains[role] = chain;
+  }
+  line.forEach((klemme, index) => graphState.joinAligned.set(klemme.id, { chains, index: index + 1 }));
+}
+
+// Rows of the N and PE Klemmen of one column of such a line, each wired from the Klemme one column further left.
+function graphAlignedRowsMarkup({ chains, index }) {
+  return ["PE", "N"].map((role) => {
+    const chain = chains[role];
+    const key = graphJoinKey(role, chain.slice(0, index + 1));
+    graphState.joinSeen.add(key);
+    graphState.joinHeads.add(key);
+    const card = graphJoinCardMarkup(role, chain, index, { from: graphJoinKey(role, chain.slice(0, index)) });
+    return `<div class="graph-join-wire graph-join-${role.toLowerCase()} graph-join-head" data-join-key="${esc(key)}">${card}</div>`;
+  }).join("");
+}
+
+// A row of a shared Verbraucher block without the further Verbraucher next to its tail (end points, not ones with an
+// output); each one taken goes to `sides` with the node it hangs on (`from`) and its conductor (`code`).
+function graphTakeSideLoads(node, inherited, sides) {
+  const children = node.children.filter((child) => {
+    if (!node.children.some((other) => other.tail) || child.type !== "load" || child.tail || !graphLoadIsEnd(child)) return true;
+    sides.push({ node: child, from: node.id, code: graphPhases(child, node, inherited)[0] || "" });
+    return false;
+  });
+  return { ...node, children: children.map((child) => graphTakeSideLoads(child, graphPhases(child, node, inherited), sides)) };
 }
 
 // The path with one Verbraucher node replaced by a tail (the wire on to the Verbraucher box at the right).
@@ -1941,6 +2155,12 @@ function graphMaxColumns() {
   return graphState.printColumns || Infinity;
 }
 
+// A Verbraucher is the end of its path unless Klemmen hang behind its output (UPS -> Steckdose); such a one is
+// drawn like a card in the path, never as a stack, a shared box or a tail.
+function graphLoadIsEnd(node) {
+  return !node.children?.length;
+}
+
 // A node is open when it has followers and is not folded.
 function graphIsOpen(node) {
   return node.children.length > 0 && (node.forceOpen || !graphState.collapsed.has(node.id));
@@ -1950,6 +2170,8 @@ function graphIsOpen(node) {
 // Klemmen, two columns together); null otherwise.
 function graphStackLoad(node) {
   const lone = graphIsOpen(node) && node.children.length === 1 ? node.children[0] : null;
+  // (Also a Verbraucher with an output: the stack draws its followers behind it; across a print row break the
+  // Verbraucher keeps the stack's height, `graphFixWraps`.)
   return lone?.type === "load" && !lone.tail && ["terminal", "channel"].includes(node.type) && graphState.loadFeeds?.has(lone.load_id) ? lone : null;
 }
 
@@ -1963,6 +2185,12 @@ function graphDepth(node) {
 // Klemme with its Verbraucher (stack) moves as a whole. The new line continues in the row's `home` column, the one
 // right after its Sicherung (2, behind an FI 3), so the Sicherungen column stays free.
 function graphWrapsAfter(node, col) {
+  // A line of Klemmen boxes with its Verbraucher (`graphAlignChains`: 200/18-20, 67a-c, Tiefkühlschrank) moves as a
+  // whole too; inside the line the row does not break.
+  if (node.children.some((child) => graphState.joinAligned?.has(child.id))) {
+    return !graphState.joinAligned.has(node.id) && col + Math.max(...node.children.map(graphDepth)) > graphMaxColumns();
+  }
+  if (graphState.joinAligned?.has(node.id)) return false;
   return col + 1 + (node.children.some((child) => graphStackLoad(child)) ? 1 : 0) > graphMaxColumns();
 }
 
@@ -1988,6 +2216,13 @@ function graphNodeMarkup(node, inherited = [], col = 1, home = col + 1) {
   const open = graphIsOpen(node);
   // The end of a row in a shared Verbraucher block: only the wire on to the shared box.
   if (node.tail) return '<div class="graph-load-tail"></div>';
+  // A Klemme of a line behind a Klemmen box (`graphAlignChains`): its box holds the N and PE Klemmen of the same
+  // column (200/20 with 200/19 and 200/18); the Verbraucher behind the last one is wired from there.
+  const aligned = open && graphState.joinAligned?.get(node.id);
+  if (aligned) {
+    const box = `<div class="graph-klemmen-stack graph-klemmen-box">${graphCardMarkup({ ...node, label: "Klemmen" }, open)}${graphAlignedRowsMarkup(aligned)}</div>`;
+    return `<div class="graph-node${node.top ? " graph-node-top" : ""}">${box}${graphFollowersMarkup(node, open, inherited, col, home)}</div>`;
+  }
   // Sicherungen view: a Klemme (or Gerät-Kanal) whose only follower is its Verbraucher gets the N and PE Klemme
   // stacked below it, so L, N and PE run side by side straight into the Verbraucher without an extra column.
   const lone = graphStackLoad(node);
@@ -1998,8 +2233,14 @@ function graphNodeMarkup(node, inherited = [], col = 1, home = col + 1) {
     // stays a card above them.
     const stack = node.type === "terminal" && graphSameCable(node, lone) ? graphKlemmenBoxMarkup(node, open, lone)
       : `<div class="graph-klemmen-stack">${graphCardMarkup(node, open)}${graphJoinKlemmen(graphState.loadFeeds.get(lone.load_id), node.location, true)}</div>`;
-    // The wire colour also on the stack: its L wire runs on behind the L Klemme to the stack's right edge.
-    return `<div class="graph-node graph-node-stack"${wire}>${stack}<div class="graph-children"${wire}><div class="graph-child"${wire}>${graphPhaseMarkup(phases)}<div class="graph-node">${graphCardMarkup({ ...lone, plain: true }, false)}</div></div></div></div>`;
+    // The wire colour also on the stack: its L wire runs on behind the L Klemme to the stack's right edge. A
+    // Verbraucher with an output (UPS) carries its followers on to the right.
+    const loadOpen = graphIsOpen(lone);
+    // (The Verbraucher stands in the column after the stack's Klemme; its followers broken onto a new line stand
+    // below it, as below any card: `graph-node-wrap`.)
+    const behind = loadOpen ? graphFollowersMarkup(lone, loadOpen, phases, col + 1, home) : "";
+    const loadWraps = loadOpen && graphWrapsAfter(lone, col + 1) ? " graph-node-wrap" : "";
+    return `<div class="graph-node graph-node-stack"${wire}>${stack}<div class="graph-children"${wire}><div class="graph-child"${wire}>${graphPhaseMarkup(phases)}<div class="graph-node${loadWraps}">${graphCardMarkup({ ...lone, plain: true }, loadOpen)}${behind}</div></div></div></div>`;
   }
   // A Verbraucher further down the path whose N/PE Klemmen are on this Klemme's cable: the Klemme's box holds them,
   // the Verbraucher stands once at the right over the whole block, the path's L wire runs into it and the N/PE
@@ -2013,9 +2254,11 @@ function graphNodeMarkup(node, inherited = [], col = 1, home = col + 1) {
   }
   // `top` keeps the card at the top of its followers (Sicherungen view) instead of in their middle; a node whose
   // followers break onto a new line stacks them below its card.
-  const classes = `${node.top ? " graph-node-top" : ""}${open && graphWrapsAfter(node, col) ? " graph-node-wrap" : ""}`;
   // Several Verbraucher behind it with N/PE Klemmen of its cable (12/u with 12/o and 12): one Klemmen box for them.
+  // (Before the classes: a line of Klemmen boxes behind it, `graphAlignChains`, decides where the row breaks.)
   const heads = graphCableHeads(node, open);
+  if (heads) graphAlignChains(node, heads);
+  const classes = `${node.top ? " graph-node-top" : ""}${open && graphWrapsAfter(node, col) ? " graph-node-wrap" : ""}`;
   if (heads) {
     const box = `<div class="graph-klemmen-stack graph-klemmen-box">${graphCardMarkup({ ...node, label: "Klemmen" }, open)}${graphCableHeadsMarkup(heads)}</div>`;
     return `<div class="graph-node${classes}">${box}${graphFollowersMarkup(node, open, inherited, col, home)}</div>`;
@@ -2071,7 +2314,8 @@ function collectGraphLoads() {
       else if (terminal?.type === "fuse") entry.feeds.push({ terminal: { ...terminal, wire_phase: (terminal.phases || []).join("/") || "L" }, role: "L", path, fuse: true });
       else if (terminal) entry.feeds.push({ terminal, role: terminalRole(terminal), path: path.slice(0, -1) });
       loads.set(node.load_id, entry);
-      return;
+      // Behind a Verbraucher's output (UPS -> Steckdose 2 -> Tiefkühlschrank) the path runs on.
+      if (!node.children.length) return;
     }
     node.children.forEach((child) => walk(child, [...path, node]));
   };
@@ -2152,8 +2396,9 @@ function loadIsFlagged(load, flagged) {
 
 // Verbraucher at the end of a path in the Sicherungen view: the L wire comes along the path (top lane); the N and
 // PE Klemmen stand as cards in their own wires below it, fed from their busbar (tap) and wired into the Verbraucher.
-function graphLoadJoinMarkup(node, load) {
-  return `<div class="graph-load-join"><div class="graph-join-feeds">${graphJoinKlemmen(load)}</div>${graphCardMarkup({ ...node, plain: true }, false)}</div>`;
+// `open`: a Verbraucher with Klemmen behind its output shows its fold button like any card.
+function graphLoadJoinMarkup(node, load, open = false) {
+  return `<div class="graph-load-join"><div class="graph-join-feeds">${graphJoinKlemmen(load)}</div>${graphCardMarkup({ ...node, plain: true }, open)}</div>`;
 }
 
 // Klemmen directly in front of a feed's Klemme on its path (20/o for N → 20/o → 32/1), nearest last.
@@ -2197,7 +2442,9 @@ function graphJoinKlemmen(load, home = "", peFirst = false) {
     if (!feed && role === "PE" && load.no_pe) return [];
     if (!feed) return [{ html: `<div class="graph-join-missing graph-join-${role.toLowerCase()}">${role} fehlt</div>` }];
     const code = feed.terminal.wire_phase || role;
-    const taps = graphFeedTaps(role, code);
+    // A chain behind a Verbraucher's output (UPS -> Steckdose 2/n -> …) is fed from that card, not from a busbar.
+    const output = graphFeedOutput(feed);
+    const taps = output ? null : graphFeedTaps(role, code);
     // Directly at N/Nx/PE (no Klemme): no card, the wire just runs through its narrow row (`.graph-join-direct`).
     if (feed.direct) return [{ html: `<div class="graph-join-wire graph-join-${role.toLowerCase()}"><span class="graph-join-direct" title="direkt, ohne Klemme"${graphTapsAttribute(taps)}></span>${graphPhaseMarkup([code], "graph-join-phase")}</div>` }];
     // Every Klemme the wire runs through, from the busbar to the Verbraucher (e.g. N → 20/o → 32/1); the busbar
@@ -2206,8 +2453,9 @@ function graphJoinKlemmen(load, home = "", peFirst = false) {
     // Below one Sicherung every Klemme is drawn once: a chain that feeds a further Verbraucher only leaves an empty
     // row there; `drawGraphRails` leads its wire from the drawn chain (`data-join-key`) to it (`data-join-ref`).
     const key = graphJoinKey(role, chain);
-    // The same when the whole chain stands in the Klemmen box of another Verbraucher drawn further on (80/o).
-    if (seen?.has(key) || skips[role] >= chain.length) {
+    // The same when the whole chain stands in the Klemmen box of another Verbraucher drawn further on (80/o), or
+    // is the start of a chain drawn already (95/o → 300/n of 95/o → 300/n → 400/6): wired from its last card.
+    if (seen?.has(key) || skips[role] >= chain.length || graphState.joinDrawn?.has(key)) {
       return [{ html: `<div class="graph-join-wire graph-join-${role.toLowerCase()} graph-join-shared" data-join-ref="${esc(key)}" data-join-code="${esc(role)}">${graphPhaseMarkup([code], "graph-join-phase")}</div>` }];
     }
     seen?.add(key);
@@ -2219,7 +2467,7 @@ function graphJoinKlemmen(load, home = "", peFirst = false) {
     const shown = chain.length - skip;
     const reach = home && shown > 1 && chain[skip].location !== home;
     const chainAttrs = `class="graph-join-chain${reach ? " graph-join-chain-reach" : ""}"${reach ? ` style="--before: ${shown - 1}"` : ""}`;
-    return [{ role, code, chain, skip, from: skip, key, taps, chainAttrs, main: true },
+    return [{ role, code, chain, skip, from: skip, key, taps, output, chainAttrs, main: true },
       ...branches[role].map(({ chain: other, from }) => ({ role, code, chain: other, skip, from, key: graphJoinKey(role, other), chainAttrs }))];
   };
   // One row's markup; `pair` ("top"/"bottom") with its `partner`: PE and N of one cable as one box without a gap,
@@ -2232,7 +2480,7 @@ function graphJoinKlemmen(load, home = "", peFirst = false) {
       return Boolean(pair) && (!other || graphCable(other) !== graphCable(chain[index]));
     };
     const cards = chain.map((terminal, index) => (index < skip ? "" : graphJoinCardMarkup(role, chain, index, {
-      taps: main && index === 0 ? row.taps : null, ghost: index < from,
+      taps: main && index === 0 ? row.taps : null, output: main && index === 0 ? row.output : null, ghost: index < from,
       from: index === from && from ? graphJoinKey(role, chain.slice(0, from)) : "",
       badge: index === chain.length - 1 ? graphPhaseMarkup([code], "graph-phase-inline") : "", split: index >= from && split(index) }))).join("");
     const classes = `graph-join-wire graph-join-${role.toLowerCase()}${main ? "" : " graph-join-branch"}${pair ? ` graph-join-pair-${pair}` : ""}`;
@@ -2267,12 +2515,23 @@ function graphJoinKey(role, chain) {
   return `${graphState.joinSection}:${role}:${chain.map((terminal) => terminal.entity_id).join(">")}`;
 }
 
+// The Verbraucher whose output feeds the Klemmen of this feed (the node right in front of them), else null.
+function graphFeedOutput(feed) {
+  const above = feed.path[feed.path.length - graphFeedKlemmen(feed).length - 1];
+  return above?.type === "load" ? above : null;
+}
+
 // One Klemme of an N/PE chain. Every drawn one is a branch point (`data-join-card`); `ghost` keeps the column of a
-// Klemme drawn in the row above free; `from` marks the first Klemme of a branch row (its wire comes from there).
-function graphJoinCardMarkup(role, chain, index, { taps = null, badge = "", split = false, ghost = false, from = "" } = {}) {
+// Klemme drawn in the row above free; `from` marks the first Klemme of a branch row (its wire comes from there);
+// `output`: the Verbraucher node whose output feeds it (`data-from-output`, by Verbraucher: its card in the drawing
+// is the one of its L link; wired by drawGraphRails).
+function graphJoinCardMarkup(role, chain, index, { taps = null, badge = "", split = false, ghost = false, from = "", output = null } = {}) {
   const terminal = chain[index];
+  const key = graphJoinKey(role, chain.slice(0, index + 1));
+  // Drawn once below this Sicherung: a chain ending here is wired from this card (`graphState.joinDrawn`).
+  if (!ghost) graphState.joinDrawn?.add(key);
   const attrs = ghost ? ' inert aria-hidden="true"'
-    : ` data-join-card="${esc(graphJoinKey(role, chain.slice(0, index + 1)))}"${from ? ` data-join-from="${esc(from)}"` : ""}`;
+    : ` data-join-card="${esc(key)}"${from ? ` data-join-from="${esc(from)}"` : ""}${output ? ` data-from-output="${esc(output.load_id)}"` : ""}`;
   return graphCardMarkup({
     ...terminal, type: "terminal", title: graphTitle(terminal), subtitle: "", children: [], entity_type: "terminal",
     taps, badge, attrs, extraClass: `graph-join-terminal${split ? " graph-join-split" : ""}${ghost ? " graph-join-ghost" : ""}` }, false);
@@ -2350,9 +2609,31 @@ function graphLoneLoad(node) {
     if (graphState.collapsed.has(current.id) && !current.forceOpen) return null;
     if (current.children.length !== 1) return null;
     const child = current.children[0];
-    if (child.type === "load") return ["terminal", "channel"].includes(current.type) && graphState.loadFeeds?.has(child.load_id) ? child : null;
+    if (child.type === "load") return graphLoadIsEnd(child) && ["terminal", "channel"].includes(current.type) && graphState.loadFeeds?.has(child.load_id) ? child : null;
   }
   return null;
+}
+
+// Every Verbraucher on the open paths of a Sicherung: load id → its node (the lone one first).
+function graphPathLoads(node) {
+  const found = new Map();
+  const lone = graphLoneLoad(node);
+  if (lone) found.set(lone.load_id, lone);
+  const walk = (current) => current.children.forEach((child) => {
+    if (child.type === "load") {
+      if (!child.tail && graphLoadIsEnd(child) && graphState.loadFeeds?.has(child.load_id) && !found.has(child.load_id)) found.set(child.load_id, child);
+    } else if (graphIsOpen(child)) walk(child);
+  });
+  if (graphIsOpen(node)) walk(node);
+  return found;
+}
+
+// The Verbraucher a Sicherung shares with the next one (a Kraftsteckdose on L1, L2, L3, also when one of the paths
+// feeds a further Verbraucher), else its lone Verbraucher; null without one.
+function graphSharedLoad(entry, next) {
+  const loads = graphPathLoads(entry.card);
+  const following = next ? graphPathLoads(next.card) : new Map();
+  return [...loads.values()].find((load) => following.has(load.load_id)) || graphLoneLoad(entry.card);
 }
 
 
@@ -2365,27 +2646,44 @@ function graphFuseRowsMarkup(entries, wrap, col = 1) {
     // Each Sicherung (or Sicherungen sharing one Verbraucher block) draws every N/PE Klemme once (`graphJoinKlemmen`).
     graphState.joinSection = (graphState.joinSection || 0) + 1;
     graphState.joinSeen = new Set();
+    graphState.joinDrawn = new Set();
     // The block's Verbraucher stands behind the longest row: only when that fits into the column limit.
-    const lone = graphLoneLoad(entries[index].card);
-    const load = lone && col + graphDepth(graphTailFor(entries[index].card, lone)) <= graphMaxColumns() ? lone : null;
+    const shared = graphSharedLoad(entries[index], entries[index + 1]);
+    const load = shared && col + graphDepth(graphTailFor(entries[index].card, shared)) <= graphMaxColumns() ? shared : null;
+    // Each row's node of that Verbraucher (its other Verbraucher stay in the row).
+    const loadNodes = [graphPathLoads(entries[index].card).get(load?.load_id) || load];
     let end = index + 1;
-    while (load && end < entries.length && graphLoneLoad(entries[end].card)?.load_id === load.load_id) end += 1;
+    while (load && end < entries.length) {
+      const node = graphPathLoads(entries[end].card).get(load.load_id);
+      if (!node || col + graphDepth(graphTailFor(entries[end].card, node)) > graphMaxColumns()) break;
+      loadNodes.push(node);
+      end += 1;
+    }
     // All N/PE chains of these paths, so a chain drawn first takes the branches of its Klemmen along.
     graphState.joinChains = graphSectionChains(entries.slice(index, end).map((entry) => entry.card));
     graphState.joinHeads = new Set();
+    graphState.joinAligned = new Map();
     graphState.joinOwners = graphCableOwners(entries.slice(index, end).map((entry) => entry.card));
     if (end - index < 2) {
       parts.push(wrap(graphNodeMarkup(entries[index].card, entries[index].phases, col)));
     } else {
-      const rows = entries.slice(index, end).map((entry) => `<div class="graph-load-group-row">${graphNodeMarkup(graphTailFor(entry.card, graphLoneLoad(entry.card)), entry.phases, col)}</div>`).join("");
+      // Further Verbraucher beside a row's tail (the Schukosteckdose of 86/u beside the Kraftsteckdose) stand in the
+      // shared Verbraucher's column below it (`graphTakeSideLoads`); their L wire branches off in front of it.
+      const sides = [];
+      const rows = entries.slice(index, end).map((entry, row) => `<div class="graph-load-group-row">${graphNodeMarkup(graphTakeSideLoads(graphTailFor(entry.card, loadNodes[row]), entry.phases, sides), entry.phases, col)}</div>`).join("");
       const join = `<div class="graph-klemmen-stack graph-klemmen-box graph-load-group-join">${graphJoinKlemmen(graphState.loadFeeds.get(load.load_id))}</div>`;
-      parts.push(wrap(`<div class="graph-load-group"><div class="graph-load-group-feeds">${rows}${join}</div>${graphCardMarkup({ ...load, plain: true }, false)}</div>`));
+      const side = sides.length
+        ? `<div class="graph-load-group-side">${sides.map(({ node, from, code }) => `<div class="graph-side-load" data-side-from="${esc(from)}" data-side-code="${esc(code)}">${graphNodeMarkup(node, [code], col)}</div>`).join("")}</div>`
+        : "";
+      parts.push(wrap(`<div class="graph-load-group${side ? " graph-load-group-sides" : ""}"><div class="graph-load-group-feeds">${rows}${join}</div>${graphCardMarkup({ ...load, plain: true }, false)}${side}</div>`));
     }
     index = end;
   }
   graphState.joinSeen = null;
+  graphState.joinDrawn = null;
   graphState.joinChains = null;
   graphState.joinHeads = null;
+  graphState.joinAligned = null;
   graphState.joinOwners = null;
   return parts.join("");
 }
@@ -4178,6 +4476,15 @@ function graphPageCuts(boxes, total, pageHeight) {
 function graphFixWraps(root) {
   root.querySelectorAll(".graph-wrap").forEach((wrap) => {
     const node = wrap.parentElement;
+    // A Verbraucher with an output in a Klemmen stack (200/17 with 200/16, 200/15 -> UPS) would stretch over the
+    // new line too: it keeps the height of its stack, the line goes below it.
+    const stack = node.firstElementChild.classList.contains("graph-load") ? node.closest(".graph-node-stack")?.querySelector(":scope > .graph-klemmen-stack") : null;
+    if (stack) {
+      // (The stack box itself stretches with the node: the height of its cards counts.)
+      const top = stack.getBoundingClientRect().top;
+      const bottom = Math.max(...[...stack.children].map((part) => part.getBoundingClientRect().bottom));
+      node.firstElementChild.style.minHeight = `${(bottom - top) / ((node.getBoundingClientRect().width / node.offsetWidth) || 1)}px`;
+    }
     const card = node.firstElementChild.getBoundingClientRect();
     const col = Number(wrap.dataset.wrapCol);
     const home = Number(wrap.dataset.wrapHome);
@@ -4191,7 +4498,10 @@ function graphFixWraps(root) {
       if (!up) break;
       const rect = up.firstElementChild.getBoundingClientRect();
       homeLeft = rect.left;
-      lowest = Math.max(lowest, rect.bottom);
+      // A Klemmen stack stretches with its node (the followers of its Verbraucher): the bottom of its cards counts.
+      const bottom = up.firstElementChild.classList.contains("graph-klemmen-stack")
+        ? Math.max(...[...up.firstElementChild.children].map((part) => part.getBoundingClientRect().bottom)) : rect.bottom;
+      lowest = Math.max(lowest, bottom);
     }
     wrap.style.marginLeft = `${homeLeft - card.left - 2 * gap}px`;
     // The wire back runs 8px below the row; below it room for the PE/N wires into the new line (drawGraphRails).

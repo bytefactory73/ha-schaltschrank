@@ -1,6 +1,6 @@
 # Home Assistant add-on: the cabinet browser in the sidebar (ingress; Home Assistant does the login).
 name: Schaltschrank
-version: "1.0.7"
+version: "1.0.8"
 slug: schaltschrank
 description: Schaltschrank-Datenbank mit Klemmen, Sicherungen, FI und der Zuordnung der KNX-Entitäten
 url: https://github.com/bytefactory73/ha-schaltschrank

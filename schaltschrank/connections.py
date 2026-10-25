@@ -12,7 +12,9 @@ Klemmen and Verbraucher are connected, and in which order. Everything else is de
   own neutral "N<number>") and the Klemmen on N; PE carries the PE Klemmen; L1-L3 carry the Sicherungen
   without FI. The connections decide a Klemme's role, never its wire colour.
 * A Verbraucher (`loads`) is a `load` leaf behind each Klemme that feeds it (L, N, PE), on a Gerät-Kanal, directly
-  on a Sicherung, or directly on N, an FI's neutral or PE. Load nodes never take part in chains, swaps or paths.
+  on a Sicherung, or directly on N, an FI's neutral or PE. Load nodes take no part in ordering. Exception: a
+  Verbraucher with an output (e.g. a UPS feeding a Steckdose) carries the Klemmen behind it at its L link; such a
+  carrying load node is part of the path (`STRUCTURAL_SQL`) and can be swapped with the Klemme above or below it.
 """
 from __future__ import annotations
 
@@ -28,8 +30,9 @@ ALLOWED_PARENTS: dict[str, set[str | None]] = {
     "fi": {"phase"},
     "fuse": {None, "phase", "fi", "channel", "terminal"},
     "channel": {None, "fuse", "terminal"},
-    # A Klemme can follow another Klemme (wired on to it).
-    "terminal": {None, "phase", "fi", "fuse", "channel", "terminal"},
+    # A Klemme can follow another Klemme (wired on to it), or a Verbraucher's output (UPS -> Steckdose; only at
+    # its L link, `validate`).
+    "terminal": {None, "phase", "fi", "fuse", "channel", "terminal", "load"},
     # A Verbraucher hangs on its Klemme, or on a Gerät-Kanal behind that Klemme (e.g. the L input of a boiler).
     # It can also hang directly on a Sicherung (its L), on N, an FI (its neutral) or PE, without a Klemme (which
     # conductors: `_conductor_problems`).
@@ -41,6 +44,13 @@ TYPE_CHILDREN = {kind: {child for child in NODE_TYPES if kind in ALLOWED_PARENTS
 # Leaf node types outside the chain structure (no ordering, swapping or path rules).
 SIDE_TYPES = ("load",)
 SIDE_TYPES_SQL = "('load')"
+# Nodes of the path structure (FROM connection_nodes): every node but a Verbraucher, which counts only while Klemmen
+# hang behind it (its output).
+STRUCTURAL_SQL = """(connection_nodes.node_type<>'load' OR EXISTS (SELECT 1 FROM connection_nodes behind
+    WHERE behind.parent_id=connection_nodes.id AND behind.node_type='terminal'))"""
+# The same for a node aliased `child` (a Klemme node is "bare" without such children: it may be moved in).
+STRUCTURAL_CHILD_SQL = """(child.node_type<>'load' OR EXISTS (SELECT 1 FROM connection_nodes behind
+    WHERE behind.parent_id=child.id AND behind.node_type='terminal'))"""
 # The nearest Klemme above node `p` (no other Klemme between them).
 NEAREST_TERMINAL_SQL = """SELECT a.terminal_id FROM connection_ancestors ca JOIN connection_nodes a ON a.id=ca.ancestor_id
     WHERE ca.node_id=p.id AND a.node_type='terminal' AND NOT EXISTS (
@@ -487,12 +497,21 @@ def validate(db: sqlite3.Connection) -> None:
         problems.append("A Verbraucher below a Gerät-Kanal needs a Klemme above that Kanal.")
     if db.execute("SELECT 1 FROM connection_ancestors WHERE node_id=ancestor_id LIMIT 1").fetchone():
         problems.append("Connections must not form a loop.")
-    # Several Klemmen may follow each other on a path; FI, Sicherung and Kanal appear once.
+    # Several Klemmen may follow each other on a path; FI, Sicherung and Kanal appear once. Verbraucher may repeat
+    # (a Steckdose behind a UPS feeds its own Verbraucher).
     if db.execute(
         """SELECT 1 FROM connection_ancestors a JOIN connection_nodes n ON n.id=a.node_id
-           JOIN connection_nodes p ON p.id=a.ancestor_id WHERE n.node_type=p.node_type AND n.node_type<>'terminal' LIMIT 1"""
+           JOIN connection_nodes p ON p.id=a.ancestor_id WHERE n.node_type=p.node_type AND n.node_type NOT IN ('terminal', 'load')
+           LIMIT 1"""
     ).fetchone():
         problems.append("A chain may contain each type (FI, Sicherung, Kanal) only once.")
+    # Klemmen behind a Verbraucher hang on its output (L, N or PE of a UPS): behind a link on a Klemme, Gerät-Kanal or
+    # Sicherung, not behind one directly on N, an FI's neutral or PE (no Klemme there to wire on from).
+    if db.execute(
+        """SELECT 1 FROM connection_nodes n JOIN connection_nodes ld ON ld.id=n.parent_id AND ld.node_type='load'
+           JOIN connection_nodes p ON p.id=ld.parent_id WHERE n.node_type='terminal' AND p.node_type IN ('phase', 'fi') LIMIT 1"""
+    ).fetchone():
+        problems.append("A Klemme cannot hang behind a Verbraucher connected directly to a conductor.")
     if db.execute(
         """SELECT 1 FROM connection_ancestors a JOIN connection_nodes n ON n.id=a.node_id AND n.node_type='terminal'
            JOIN connection_nodes p ON p.id=a.ancestor_id AND p.node_type='terminal' WHERE n.terminal_id=p.terminal_id LIMIT 1"""
@@ -1030,7 +1049,9 @@ def _move_loads_to_chain_ends(db: sqlite3.Connection) -> int:
     for node_id, terminal_id, load_id in db.execute(
         """SELECT ld.id, tn.terminal_id, ld.load_id FROM connection_nodes ld
            JOIN connection_nodes tn ON tn.id=ld.parent_id WHERE ld.node_type='load' AND tn.node_type='terminal'
-           AND ld.note<>? ORDER BY ld.id""", (FIXED_LOAD_NOTE,)
+           AND ld.note<>?
+           -- A Verbraucher with Klemmen behind its output stays where it is (they would lose their place).
+           AND NOT EXISTS (SELECT 1 FROM connection_nodes behind WHERE behind.parent_id=ld.id) ORDER BY ld.id""", (FIXED_LOAD_NOTE,)
     ).fetchall():
         if _chain_end(db, terminal_id) == terminal_id:
             continue
@@ -1433,6 +1454,9 @@ def _keeps_side_nodes(function):
             """SELECT p.terminal_id, ld.load_id FROM connection_nodes ld JOIN connection_nodes p ON p.id=ld.parent_id
                WHERE ld.node_type='load' AND ld.note=? AND p.node_type='terminal'""", (FIXED_LOAD_NOTE,)).fetchall()}
         on_channels = [link for link in _load_links(db) if link["parent_type"] == "channel"]
+        # Klemmen behind a Verbraucher's output (UPS -> Steckdose): their node, Verbraucher, its feed and place.
+        behind = _rows(db, f"""SELECT n.id, n.terminal_id, link.id AS load_node, link.load_id, link.terminal_id AS feeder, link.parent_id
+            FROM connection_nodes n JOIN ({LOAD_LINKS_SQL}) link ON link.id=n.parent_id WHERE n.node_type='terminal' ORDER BY n.id""")
         result = function(db, *args, **kwargs)
         # A Kanal that lost its Klemme above cannot feed a Verbraucher any more.
         db.execute(f"DELETE FROM connection_nodes WHERE id IN (SELECT id FROM ({LOAD_LINKS_SQL}) WHERE parent_type='channel' AND terminal_id IS NULL)")
@@ -1449,8 +1473,48 @@ def _keeps_side_nodes(function):
         # Everything else (and a Kanal that is gone) hangs on the Klemme again.
         for terminal_id, load_id in saved_loads:
             _link_load(db, terminal_id, load_id, (terminal_id, load_id) in fixed)
+        if _restore_behind_loads(db, behind):
+            finish(db)
         return result
     return wrapper
+
+
+def _restore_behind_loads(db: sqlite3.Connection, behind: list[dict[str, Any]]) -> bool:
+    """Klemmen that hung behind a Verbraucher's output go back there after a rebuild re-created its node; returns
+    whether something moved.
+
+    Only when the Verbraucher's node went away, and only a Klemme whose node went too or was spliced up to where
+    the Verbraucher hung (or to the roots); one moved on purpose elsewhere stays where it is.
+    """
+    changed = False
+    for item in behind:
+        # The Verbraucher's node is still there: whatever happened to the Klemme was meant (e.g. its wire was cut).
+        # Checked by its content too, since SQLite may give a new node the id of a deleted one.
+        if db.execute("SELECT 1 FROM connection_nodes WHERE id=? AND node_type='load' AND load_id=? AND parent_id IS ?",
+                      (item["load_node"], item["load_id"], item["parent_id"])).fetchone():
+            continue
+        # The Verbraucher's node now: behind the same Klemme (or on the same Sicherung/Kanal without one).
+        anchor = db.execute(
+            f"SELECT id FROM ({LOAD_LINKS_SQL}) WHERE load_id=? AND " + ("terminal_id=?" if item["feeder"] is not None else "parent_id=?")
+            + " ORDER BY id LIMIT 1", (item["load_id"], item["feeder"] if item["feeder"] is not None else item["parent_id"])).fetchone()
+        if anchor is None:
+            continue
+        anchor = int(anchor[0])
+        node = db.execute("SELECT parent_id FROM connection_nodes WHERE id=?", (item["id"],)).fetchone()
+        # Spliced up (to the Verbraucher's old place, or to the roots when that node went away too).
+        if node is not None and (node[0] == anchor or node[0] not in (item["parent_id"], None)):
+            continue
+        twin = _find_node(db, anchor, "terminal", {"terminal_id": item["terminal_id"]})
+        if node is None:
+            if twin is None:
+                _hang_behind(db, anchor, item["terminal_id"])
+        elif twin is None:
+            _move_raw(db, item["id"], anchor)
+        else:
+            db.execute("UPDATE OR IGNORE connection_nodes SET parent_id=? WHERE parent_id=?", (twin, item["id"]))
+            db.execute("DELETE FROM connection_nodes WHERE id=?", (item["id"],))
+        changed = True
+    return changed
 
 
 def rebuild_node_table(db: sqlite3.Connection) -> None:
@@ -1568,7 +1632,7 @@ def add_channel_link(db: sqlite3.Connection, terminal_id: int, spec: dict[str, A
     bare = db.execute(
         f"""SELECT id FROM connection_nodes WHERE node_type='terminal' AND terminal_id=? AND parent_id IS ?
             AND NOT EXISTS (SELECT 1 FROM connection_nodes child
-                            WHERE child.parent_id=connection_nodes.id AND child.node_type NOT IN {SIDE_TYPES_SQL})""",
+                            WHERE child.parent_id=connection_nodes.id AND {STRUCTURAL_CHILD_SQL})""",
         (terminal_id, parent),
     ).fetchone()
     if bare:
@@ -1595,7 +1659,7 @@ def append_channel_link(db: sqlite3.Connection, terminal_id: int, spec: dict[str
         f"""SELECT node.id FROM connection_nodes node
            WHERE node.node_type='terminal' AND node.terminal_id=?
              AND NOT EXISTS (SELECT 1 FROM connection_nodes child WHERE child.parent_id=node.id
-                             AND child.node_type NOT IN {SIDE_TYPES_SQL})
+                             AND {STRUCTURAL_CHILD_SQL})
              AND NOT EXISTS (SELECT 1 FROM connection_ancestors a JOIN connection_nodes p ON p.id=a.ancestor_id
                              WHERE a.node_id=node.id AND p.node_type='channel')
            ORDER BY node.id""",
@@ -1679,7 +1743,14 @@ def add_branch(db: sqlite3.Connection, node_id: int, kind: str, ref: dict[str, A
 
     `ref` is a channel spec (kind 'channel') or {'terminal_id': ...} (kind 'terminal'). A Klemme that
     only exists as a bare root node is moved here instead of being duplicated. Returns the new node's id.
+    Behind a Verbraucher (its output, e.g. Steckdose 3 beside Steckdose 2 at a UPS) only a Klemme can be added.
     """
+    if _node(db, node_id)["node_type"] == "load":
+        if kind != "terminal":
+            raise ConnectionTreeError("Only a Klemme can be placed behind a Verbraucher.")
+        new_id = _hang_behind(db, node_id, ref["terminal_id"])
+        finish(db)
+        return new_id
     parent = _structural_node(db, node_id)
     if kind not in TYPE_CHILDREN[parent["node_type"]] & {"channel", "terminal"}:
         raise ConnectionTreeError(f"A {kind} cannot be placed below a {parent['node_type']}.")
@@ -1708,7 +1779,7 @@ def add_branch(db: sqlite3.Connection, node_id: int, kind: str, ref: dict[str, A
             bare = db.execute(
                 f"""SELECT id FROM connection_nodes WHERE node_type='terminal' AND terminal_id=? AND parent_id IS NULL
                     AND NOT EXISTS (SELECT 1 FROM connection_nodes child
-                                    WHERE child.parent_id=connection_nodes.id AND child.node_type NOT IN {SIDE_TYPES_SQL})""",
+                                    WHERE child.parent_id=connection_nodes.id AND {STRUCTURAL_CHILD_SQL})""",
                 (ref["terminal_id"],),
             ).fetchone()
             if bare:
@@ -1745,7 +1816,7 @@ def insert_terminal(db: sqlite3.Connection, node_id: int, terminal_id: int) -> i
         bare = db.execute(
             f"""SELECT id FROM connection_nodes WHERE node_type='terminal' AND terminal_id=? AND parent_id IS NULL
                 AND NOT EXISTS (SELECT 1 FROM connection_nodes child
-                                WHERE child.parent_id=connection_nodes.id AND child.node_type NOT IN {SIDE_TYPES_SQL})""",
+                                WHERE child.parent_id=connection_nodes.id AND {STRUCTURAL_CHILD_SQL})""",
             (terminal_id,),
         ).fetchone()
         if bare:
@@ -2019,7 +2090,7 @@ def tree_json(db: sqlite3.Connection, root_id: int, labels: dict[int, dict[str, 
     ids = _subtree(db, root_id)
     rows = {row["id"]: row for row in _rows(
         db,
-        f"SELECT id, parent_id, sort_order, node_type FROM connection_nodes WHERE node_type NOT IN {SIDE_TYPES_SQL} AND id IN (%s)"
+        f"SELECT id, parent_id, sort_order, node_type FROM connection_nodes WHERE {STRUCTURAL_SQL} AND id IN (%s)"
         % ",".join("?" * len(ids)),
         tuple(ids),
     )}
@@ -2057,8 +2128,9 @@ def _swap_is_valid(rows: dict[int, dict[str, Any]], children: dict[int | None, l
     if parent_id is not None and parent_id not in rows:
         return False
     parent_type = rows[parent_id]["node_type"] if parent_id else None
-    # A node with other followers is split in two; FI and Sicherung exist only once in the tree.
-    if len(followers) > 1 and node_type in ("fi", "fuse"):
+    # A node with other followers is split in two; FI and Sicherung exist only once in the tree, a Verbraucher's
+    # output is not split either.
+    if len(followers) > 1 and node_type in ("fi", "fuse", "load"):
         return False
     # After the swap: child sits below the old parent, node below the child, grandchildren below the node.
     return (
@@ -2068,13 +2140,23 @@ def _swap_is_valid(rows: dict[int, dict[str, Any]], children: dict[int | None, l
     )
 
 
+def _load_swap_is_valid(rows: dict[int, dict[str, Any]], terminal_node_id: int) -> bool:
+    """Whether a Verbraucher at the end of a path can swap with the Klemme it hangs on (UPS -> Steckdose, for its L,
+    N or PE): the Verbraucher takes the Klemme's place, which must be behind a Klemme, Gerät-Kanal or Sicherung."""
+    row = rows.get(terminal_node_id)
+    if row is None or row["node_type"] != "terminal":
+        return False
+    parent = rows.get(row["parent_id"]) if row["parent_id"] is not None else None
+    return parent is not None and parent["node_type"] in ("terminal", "channel", "fuse")
+
+
 def _tree_context(db: sqlite3.Connection, node_ids: list[int]) -> tuple[dict[int, dict[str, Any]], dict[int | None, list[int]]]:
     """Rows and ordered child lists of every tree that contains one of the given nodes."""
     ids = sorted({member for root in {_chain_root(db, node_id) for node_id in node_ids} for member in _subtree(db, root)})
     rows = {row["id"]: row for row in _rows(
         db,
-        "SELECT id, parent_id, sort_order, node_type, terminal_id, device_id, channel_key FROM connection_nodes "
-        f"WHERE node_type NOT IN {SIDE_TYPES_SQL} AND id IN (%s)" % ",".join("?" * len(ids)),
+        "SELECT id, parent_id, sort_order, node_type, terminal_id, device_id, channel_key, load_id FROM connection_nodes "
+        f"WHERE {STRUCTURAL_SQL} AND id IN (%s)" % ",".join("?" * len(ids)),
         tuple(ids),
     )}
     children: dict[int | None, list[int]] = {}
@@ -2122,7 +2204,7 @@ def _merge_paths(rows: dict[int, dict[str, Any]], children: dict[int | None, lis
     for path in paths:
         for node_id in path:
             row = rows[node_id]
-            identity = (row["node_type"], row["terminal_id"], row["device_id"], row["channel_key"])
+            identity = (row["node_type"], row["terminal_id"], row["device_id"], row["channel_key"], row.get("load_id"))
             if row["node_type"] == "fi" or identity in seen:
                 continue
             seen.add(identity)
@@ -2130,7 +2212,7 @@ def _merge_paths(rows: dict[int, dict[str, Any]], children: dict[int | None, lis
             above = row["parent_id"] if branch else (chain[-1]["node_id"] if chain else None)
             attached = above is not None and row["parent_id"] == above
             swappable = attached and _swap_is_valid(rows, children, above, node_id)
-            chain.append({"type": row["node_type"], "node_id": node_id, "terminal_id": row["terminal_id"],
+            chain.append({"type": row["node_type"], "node_id": node_id, "load_id": row.get("load_id"), "terminal_id": row["terminal_id"],
                           "device_id": row["device_id"], "channel_key": row["channel_key"],
                           "swap_node_id": above if swappable else None,
                           "swap_child_id": node_id if swappable else None,
@@ -2252,9 +2334,12 @@ def terminal_chain(db: sqlite3.Connection, terminal_id: int) -> list[dict[str, A
         "SELECT id, parent_id, load_id FROM connection_nodes WHERE node_type='load' AND parent_id IN (%s) ORDER BY sort_order, id"
         % ",".join("?" * len(down)), tuple(down),
     ).fetchall():
-        if parent_id in listed:
+        if parent_id in listed and node_id not in listed:
+            # A Verbraucher can swap with its Klemme: the Klemme then hangs behind the Verbraucher's output.
+            swappable = _load_swap_is_valid(rows, parent_id)
             chain.append({"type": "load", "node_id": node_id, "load_id": load_id, "terminal_id": None, "device_id": None,
-                          "channel_key": None, "swap_node_id": None, "swap_child_id": None, "drop_node_id": None,
+                          "channel_key": None, "swap_node_id": parent_id if swappable else None,
+                          "swap_child_id": node_id if swappable else None, "drop_node_id": None,
                           "branch_node_id": None, "branch_type": None, "down_parent_id": parent_id})
     return chain
 
@@ -2285,9 +2370,9 @@ def move_node(db: sqlite3.Connection, node_id: int, new_parent_id: int | None, i
     """Move a node with its subtree below another node (or to the roots) at a position."""
     node = _structural_node(db, node_id)
     if new_parent_id is not None:
-        # A conductor start node can take followers; a Verbraucher cannot.
-        if _node(db, new_parent_id)["node_type"] in SIDE_TYPES:
-            raise ConnectionTreeError("Nothing can be placed below a Verbraucher.")
+        # A conductor start node can take followers; a Verbraucher only Klemmen (behind its output).
+        if _node(db, new_parent_id)["node_type"] in SIDE_TYPES and node["node_type"] != "terminal":
+            raise ConnectionTreeError("Only a Klemme can be placed behind a Verbraucher.")
         if new_parent_id in _subtree(db, node_id):
             raise ConnectionTreeError("A node cannot be moved below itself.")
     siblings = [child for child in _children(db, new_parent_id) if child != node_id]
@@ -2302,6 +2387,35 @@ def move_node(db: sqlite3.Connection, node_id: int, new_parent_id: int | None, i
     finish(db)
 
 
+def _swap_with_load(db: sqlite3.Connection, upper_id: int, lower_id: int) -> None:
+    """Swap a Klemme and a Verbraucher directly below it (or back): 200/17 -> Steckdose 2 -> UPS becomes
+    200/17 -> UPS -> Steckdose 2, the Steckdose then hangs on the UPS output.
+
+    The lower node takes the upper one's place; what hangs behind the lower node's output (Klemmen) moves to the
+    upper one, the upper one keeps its own Verbraucher. The rules decide the rest (`finish`).
+    """
+    upper, lower = _node(db, upper_id), _node(db, lower_id)
+    if lower["parent_id"] != upper_id:
+        raise ConnectionTreeError("Only a node and its direct follower can be swapped.")
+    if {upper["node_type"], lower["node_type"]} != {"terminal", "load"}:
+        raise ConnectionTreeError("A Verbraucher can only be swapped with a Klemme.")
+    if upper["parent_id"] is None:
+        raise ConnectionTreeError("There is no wire above this entry.")
+    if upper["node_type"] == "load" and db.execute(
+            "SELECT 1 FROM connection_nodes WHERE parent_id=? AND node_type='terminal' AND id<>?", (upper_id, lower_id)).fetchone():
+        raise ConnectionTreeError("Several Klemmen hang behind this Verbraucher; choose one by removing the others first.")
+    try:
+        # Klemmen behind the lower node's output go behind the upper node.
+        db.execute(f"UPDATE connection_nodes SET parent_id=? WHERE parent_id=? AND node_type NOT IN {SIDE_TYPES_SQL}",
+                   (upper_id, lower_id))
+        db.execute("UPDATE connection_nodes SET parent_id=?, sort_order=? WHERE id=?",
+                   (upper["parent_id"], upper["sort_order"], lower_id))
+        db.execute("UPDATE connection_nodes SET parent_id=?, sort_order=0 WHERE id=?", (lower_id, upper_id))
+    except sqlite3.IntegrityError as error:
+        raise ConnectionTreeError("The same entry already exists at that position.") from error
+    finish(db)
+
+
 def swap_with_child(db: sqlite3.Connection, node_id: int, child_id: int | None = None) -> None:
     """Swap a node with one follower (default: its only one); the part of the chain below the follower stays below.
 
@@ -2309,6 +2423,9 @@ def swap_with_child(db: sqlite3.Connection, node_id: int, child_id: int | None =
     the swapped path gets its own copy of the node. If the follower already exists beside the node
     (e.g. when a split is swapped back), the swapped path is merged into that one.
     """
+    if child_id is not None and "load" in (_node(db, node_id)["node_type"], _node(db, child_id)["node_type"]):
+        _swap_with_load(db, node_id, child_id)
+        return
     node = _structural_node(db, node_id)
     kids = _children(db, node_id)
     if child_id is None and len(kids) == 1:
